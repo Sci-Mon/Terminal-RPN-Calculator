@@ -2,7 +2,7 @@
 title: Terminal RPN Calculator
 subtitle: "an RPN calculator for the shell"
 author: Simon Widmer
-date: 2026-03-25
+date: 30.03.2026
 lang: en
 license: GNU GPL3
 cover-image: rpn-calc.svg
@@ -51,7 +51,6 @@ Don't use this calculator if you plan to fly to the moon. I'm not kidding — ex
 * Errors are shown in red and cleared after 2 seconds.
 * Decimal numbers are separated by a period.
 * the size of the stack is unlimited (in theory).
-
 
 ### User Interface ⎚
 
@@ -180,16 +179,19 @@ The following functions can be used followed by hitting *ENTER*:
 * Logic operations
   * `setwordsize` or `stws` → sets word size for logic ops (the default word size is 64 bits)
   * `recallwordsize` or `rcws` → recalls word size to stack
+  * `and` → Logical or binary AND.
+  * `or` → Logical or binary OR
+  * `xor` → Logical or binary exclusive OR.
+  * `not` → Logical or binary NOT.
   * `sl` or `lsl` → logical shift left 1 bit
   * `sr` or `lsr` → logical shift right 1 bit
   * `slb` → shift left 1 byte (8 bits)
   * `srb` → shift right 1 byte (8 bits)
   * `asr` → arithmetic shift right (sign bit replicated)
-  * `b
-  * `not` → Logical or binary NOT.
-  * `and` → Logical or binary AND.
-  * `or` → Logical or binary OR
-  * `xor` → Logical or binary exclusive OR.
+  * `rl` → rotate left 1 bit
+  * `rr` → rotate right 1 bit
+  * `rlb` → rotate left 1 byte (8 bits)
+  * `rrb` → rotate right 1 byte (8 bits)
 
 #### Constants ◆
 
