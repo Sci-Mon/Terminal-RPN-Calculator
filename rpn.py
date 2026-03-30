@@ -390,11 +390,6 @@ def display_help():
         f"{L} tan or tangent              : tangent{RESET}",
         f"{L} atan arctangent             : arc tangent{RESET}",
         f"{L} tanh tangenthyperbolicus    : hyperbolic tangent{RESET}",
-        f"{H}── Conversions ────────────────────────────────────────────{RESET}",
-        f"{L} dtor or d>r                 : Degrees-to-radians conversion.{RESET}",
-        f"{L} rtod or r>d                 : radians → degrees{RESET}",
-        f"{L} >hms or tohms               : decimal hours → H.MMSSss{RESET}",
-        f"{L} >h   or toh                 : H.MMSSss → decimal hours{RESET}",
         f"{H}── Constants ──────────────────────────────────────────────{RESET}",
         f"{L} pi                 : 3.1415927… (π){RESET}",
         f"{L} tau                : 6.2831853… (𝜏 = 2π){RESET}",
@@ -410,13 +405,15 @@ def display_help():
         f"{L} or                     : bitwise OR{RESET}",
         f"{L} xor                    : bitwise XOR{RESET}",
         f"{L} not                    : bitwise NOT{RESET}",
-        f"{L} sl  / lsl              : logical shift left 1 bit{RESET}",
-        f"{L} sr  / lsr              : logical shift right 1 bit{RESET}",
+        f"{L} sl or lsl              : logical shift left 1 bit{RESET}",
+        f"{L} sr or lsr              : logical shift right 1 bit{RESET}",
         f"{L} slb                    : shift left 1 byte (8 bits){RESET}",
         f"{L} srb                    : shift right 1 byte (8 bits){RESET}",
         f"{L} asr                    : arithmetic shift right (sign bit replicated){RESET}",
-        f"{L} rl  / rr               : rotate left / right 1 bit{RESET}",
-        f"{L} rlb / rrb              : rotate left / right 1 byte (8 bits){RESET}",
+        f"{L} rl                     : rotate left 1 bit{RESET}",
+        f"{L} rr                     : rotate right 1 bit{RESET}",
+        f"{L} rlb                    : rotate left 1 byte (8 bits){RESET}",
+        f"{L} rrb                    : rotate right 1 byte (8 bits){RESET}",
         f"{H}── Memory ─────────────────────────────────────────────────{RESET}",
         f"{L} sto : stores stack 1 to memory{RESET}",
         f"{L} rcl : recalls stored value to stack 1{RESET}",
@@ -424,6 +421,11 @@ def display_help():
         f"{H}── Display Modes ──────────────────────────────────────────{RESET}",
         f"{L} Base:    dec, hex, oct, bin{RESET}",
         f"{L} Format:  fix {ITALIC}(default){RESET}{L}, sci, eng {ITALIC}(e.g. 4 sci){RESET}",
+        f"{H}── Conversions ────────────────────────────────────────────{RESET}",
+        f"{L} deg2rad or d>r or deg>rad   : Degrees-to-radians conversion.{RESET}",
+        f"{L} rad2deg or r>d or rad>deg   : radians → degrees{RESET}",
+        f"{L} >hms or 2hms                : decimal hours → H.MMSSss{RESET}",
+        f"{L} >h   or 2hours              : H.MMSSss → decimal hours{RESET}",
 
     ]
     # Calculate total pages and initialize page index
@@ -869,11 +871,11 @@ while True:
                 # atan2(y, x): stack 2 = y, stack 1 = x → angle in degrees
                 x, y = stack.pop(0), stack.pop(0)
                 stack.insert(0, int(math.degrees(math.atan2(y/SCALE, x/SCALE)) * SCALE))
-            elif cmd in ("dtor", "d>r", "deg>rad") and len(stack) > 0:
+            elif cmd in ("deg2rad", "d>r", "deg>rad") and len(stack) > 0:
                 stack[0] = int(math.radians(stack[0]/SCALE) * SCALE)
-            elif cmd in ("rtod", "r>d", "rad>deg") and len(stack) > 0:
+            elif cmd in ("rad2deg", "r>d", "rad>deg") and len(stack) > 0:
                 stack[0] = int(math.degrees(stack[0]/SCALE) * SCALE)
-            elif cmd in ("tohms", ">hms") and len(stack) > 0:
+            elif cmd in ("2hms", ">hms") and len(stack) > 0:
                 # decimal hours → H.MMSSss  e.g. 1.5 → 1.3000 (1h30m00s)
                 h_dec = stack[0] / SCALE
                 sign = -1 if h_dec < 0 else 1
@@ -882,7 +884,7 @@ while True:
                 m = int((h_dec - h) * 60)
                 s = ((h_dec - h) * 60 - m) * 60
                 stack[0] = sign * int((h + m/100 + s/10000) * SCALE)
-            elif cmd in ("toh", ">h", "hms>h") and len(stack) > 0:
+            elif cmd in ("2hours", ">h", "hms>h") and len(stack) > 0:
                 # H.MMSSss → decimal hours  e.g. 1.3000 → 1.5
                 hms = stack[0] / SCALE
                 sign = -1 if hms < 0 else 1

@@ -2,7 +2,7 @@
 title: Terminal RPN Calculator
 subtitle: "an RPN calculator for the shell"
 author: Simon Widmer
-date: 30.03.2026
+date: 31.03.2026
 lang: en
 license: GNU GPL3
 cover-image: rpn-calc.svg
@@ -20,11 +20,12 @@ an RPN calculator for the shell
 ## Preface and history 📜
 
 First of all: This calculator is not another exactly emulated Hewlett Packard ™ calculator nor is it using ROM files to provide the full functionality. At the current state, it is not able to store and execute [RPL](https://en.wikipedia.org/wiki/RPL_(programming_language))-programs. Even so, if you are used to those calculators, you might remember and recognize the most useful [commands](https://literature.hpcalc.org/community/hp48sx-qrg-en.pdf).
-Lets say, the calculator mimics its great predecessors. In addition to the usual abbreviated commands, these can also be written as full words.
+Lets say, the calculator mimics its great predecessors. In addition to the usual abbreviated commands, these can also be written as full words. Note that some commands are not implemented in the famous calculators but I found them to be useful anyway.
 
-I am using RPN calculators since I was a teenager and still appreciate it. Hence, it is my intention to program a calculator which supports RPN (reverse polish notation) on the one hand and is executable in a terminal on the other hand. It is written in pure python and designed to be a simple and distraction free terminal shell tool with no dependencies. (Actually, this calculator has come a long way: I originally planned to create a pure Bash implementation using `bc` in the background, but ultimately decided against it during the implementation process.)
+I am using RPN calculators since I was a teenager and still appreciate it. Hence, it is my intention to program a calculator which supports RPN (reverse polish notation) on the one hand and is executable in a terminal on the other hand. It is written in pure python and designed to be a simple and distraction free terminal shell tool with no dependencies. Despite the simple design, it has become a quite powerful calculator with a lot of functions.
+(Actually, this calculator has come a long way: I originally planned to create a pure Bash implementation using `bc` in the background, but ultimately decided against it during the implementation process. The current Python implementation is much more powerful and easier to maintain than the original Bash version would have been.)
 
-Again, keep in mind: This is not the real and famous HP42S™ or HP48SX™ that is supporting programming, unit conversions, graphs, equation solvers, libraries and lots of things I do not even know of. Those real calculators are an industrial work of art and may never be compared with.
+Again, keep in mind: This is not the real and famous HP42S™ or HP48SX™ that is supporting programming, unit conversions, graphs, equation solvers, libraries and lots of things I do not even know of. Those real calculators are an industrial and technical work of art I admire and may never be compared with.
 
 ## Installation 📦
 
@@ -42,7 +43,7 @@ Again, keep in mind: This is not the real and famous HP42S™ or HP48SX™ that 
 
 ### Disclaimer ⚠️
 
-Don't use this calculator if you plan to fly to the moon. I'm not kidding — expect that some results might be wrong.
+Don't use this calculator if you plan to fly to the moon. I'm not kidding — expect that some results might be wrong. Testing all functions and edge cases is a huge task.
 
 ### General 👆
 
@@ -223,16 +224,16 @@ The following constants are implemented for now and can be entered followed by h
 #### Base Modes ⚙️
 
 * `dec` will show the stack in *decimal* values
-  * notation of exponential numbers: (e.g. 3e6, 1.5E4, 5.2e-3, …)
 * `hex` will show the stack in *hexadecimal* values
 * `bin` will show the stack in *binary* values
 * `oct` will show the stack in *octal* values
 * the current mode is indicated below the stack at the input prompt if not in *decimal-mode*
 
-#### Notation of hex or bin value(s) ✒️
+#### Notation of dec, hex or bin value(s) ✒️
 
 The notation of a hexadecimal or binary number can be typed in as follows:
 
+* decimal notation of exponential numbers: (e.g. 3e6, 1.5E4, 5.2e-3, …)
 * binary: e.g.: `0b1111`, `0b10101010`, …
 * hexadecimal : e.g. like `0xabcd`, `0xAFAEBD`, … or directly without leading 0b or 0x.
 
@@ -242,7 +243,14 @@ Further notice:
 * if in decimal mode, all entered values with leading `0x`, `0b` or `0o` are directly converted into the decimal value.
 * same behavior and conversion for the other modes
 
-### Limitations ▲/▼
+#### Conversion Modes
+
+* deg2rad or d>r or deg>rad → Degrees-to-radians conversion.
+* rad2deg or r>d or rad>deg → radians → degrees
+* \>hms or 2hms              → decimal hours → H.MMSSss
+* \>h   or 2hours            → H.MMSSss → decimal hours
+
+### Limitations ▲ ▼
 
 * the digits are limited to the value **`16`**.
 
@@ -268,22 +276,15 @@ The following features are on my to do list:
 * rad, deg, (grad: not useful)
 * thousands-separator: ‘,‘ or ‘'‘
 * missing commands
-  * asr, asl: arithmetic shift left
   * beep
   * bytes
   * date and time functions (date, date+, ddays)
-  * hms
   * dropn
-  * dupn,
-  * fp: Returns fractional part of a number
+  * dupn, pickn
   * key (would be nice for debugging new hotkeys)
   * lnp1 Natural logarithm of (x + 1).
-  * mant mantissa
-  * max, min, maxr
-  * rl, rlb, rr, rrb
-  * sign
+  * max, min, maxr, minr
   * sto+-/*
-  * xpon
 
 ## Error reporting 🐛
 

@@ -7,6 +7,8 @@
 * implemented logic operations
 * corrected and implemented further logic functions
 * scientific notation for input (e.g. 3e6, 1.5E4)
+* conversions between decimal hours and H.MMSSss (e.g. 1.5 → 1.3000 and 1.3000 → 1.5)
+* conversions between degrees and radians (e.g. 180 → 3.1415927… and 3.1415927… → 180)
 
 ## v1.5
 
