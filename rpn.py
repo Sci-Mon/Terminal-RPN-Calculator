@@ -53,15 +53,12 @@ else:
     import termios
 
 APPNAME = "Terminal RPN Calculator"
-VERSION = "v1.6"
+VERSION = "v1.7"
 AUTHOR = "Simon Widmer"
 EMAIL = "sery(at)solnet.ch"
 
 
-def show_error(msg):
-    sys.stdout.write(f"\r\n{BOLD}{RED}{msg}{RESET}")
-    sys.stdout.flush()
-    time.sleep(2)
+
 
 # VT100 Escape Sequences
 CLS, HOME, RESET, BOLD, UNDERLINE, ITALIC = "\x1b[2J", "\x1b[H", "\x1b[0m", "\x1b[1m", "\x1b[4m", "\x1b[3m"
@@ -73,6 +70,9 @@ ERASELINE = "\x1b[2K"
 ERASEDOWN = "\x1b[0J"
 WHITE, RED = "\x1b[97m", "\x1b[91m"
 LIGHTGRAY, DARKGRAY = "\x1b[37m", "\x1b[90m"
+ORANGEONBROWN = "\x1b[38;5;214m\x1b[48;5;94m"
+# inverse black font on white background for footer of help UI
+FOOTER = "\x1b[7m"
 
 # Internal scale: 10^16 for zero-noise math
 SCALE_POW = 16
@@ -86,6 +86,14 @@ display_mode = "dec"
 display_format = "fix"   # "fix", "sci", "eng"
 setwordsize = 64 # for logic operations, the default word size is 64 bits
 
+error_displayed = False
+def show_error(msg):
+    global error_displayed
+    if not error_displayed:
+        sys.stdout.write(f"\r\n{BOLD}{RED}{msg}{RESET}")
+        sys.stdout.flush()
+        time.sleep(2)
+        error_displayed = True
 
 # -------------------------
 # High-precision constants
@@ -110,8 +118,8 @@ def to_fixed(s):
         if display_mode == "hex":
             try:
                 return int(s, 16) * SCALE
-            except:
-                pass
+            except ValueError:
+                return None
 
         # --- BINARY INPUT ---
         if s.startswith("0b"):
@@ -120,8 +128,8 @@ def to_fixed(s):
         if display_mode == "bin":
             try:
                 return int(s, 2) * SCALE
-            except:
-                pass
+            except ValueError:
+                return None
 
         # --- OCTAL INPUT ---
         if s.startswith("0o"):
@@ -130,13 +138,10 @@ def to_fixed(s):
         if display_mode == "oct":
             try:
                 return int(s, 8) * SCALE
-            except:
-                pass
+            except ValueError:
+                return None
 
         # --- DECIMAL INPUT ---
-        # Scientific notation: 3e6, 1.5E-3, -2.7e+8 etc.
-        if "e" in s:
-            return int(float(s) * SCALE)
         if "." not in s:
             return int(s) * SCALE
 
@@ -147,12 +152,12 @@ def to_fixed(s):
         val = abs(int(w_part)) * SCALE + int(f_part)
         return -val if s.startswith("-") else val
 
-    except:
+    except Exception:
         return None
+
 # Formats the scaled integer back to a string for display, respecting
 # the current display mode (dec, hex, bin, oct) and display_format (fix, sci, eng).
 def format_val(val_int):
-    """Formats scaled integer to clean decimal string with thousand separators ','."""
     try:
         is_neg = val_int < 0
         v = abs(val_int)
@@ -228,7 +233,8 @@ def format_val(val_int):
                     res = "0"
                 result = sign + res
 
-    except:
+    except Exception as e:
+        show_error(f"Format error: {e}")
         return "Error"
 
     # Overflow guard: truncate with ellipsis if wider than display box
@@ -240,7 +246,6 @@ def format_val(val_int):
 # handling special keys and escape sequences
 # for both Windows and Unix-like systems.
 def get_char():
-    """Reads a single keypress from the terminal."""
     
     if os.name == "nt":
         ch = msvcrt.getch()
@@ -296,7 +301,7 @@ def display_about():
     print(f"\n License:      {LIGHTGRAY}GNU General Public License v3.0 or later{RESET}")
     print(f"{LIGHTGRAY}─────────────────────────────────────────────────────────────────────────{RESET}")
     # q key to return to main UI
-    print(f"{WHITE}q: quit{RESET}")
+    print(f"{FOOTER}q: quit                                                                  {RESET}")
     sys.stdout.write(CURSORSHOW)
         # Wait until 'q' is pressed
     while True:
@@ -328,7 +333,7 @@ def display_help():
         f"{H}── Commands ───────────────────────────────────────────────{RESET}",
         f"{L} exit, quit, off : exit {APPNAME}{RESET}",
         f"{L} help            : show this help{RESET}",
-        f"{L} about           : about dialog{RESET}",
+        f"{L} about, info     : about dialog{RESET}",
         f"{L} mem             : show available mem of OS{RESET}",
         f"{L} refresh         : refresh user interface{RESET}",
         f"{H}── Instantaneous Arithmetic Operations ────────────────────{RESET}",
@@ -340,56 +345,61 @@ def display_help():
         f"{L} ^  : exponention (yˣ). Returns stack 2 ^ stack 1{RESET}",
         f"{L} _  : changes the sign of a number (+/-). Returns -stack 1{RESET}",
         f"{H}── Stack Operations ───────────────────────────────────────{RESET}",
-        f"{L} clr                       : clear entire stack{RESET}",
-        f"{L} swap                      : swap stack 2 and stack 1{RESET}",
-        f"{L} drop                      : drop stack 1{RESET}",
-        f"{L} drop2                     : drop stack 1 and stack 2{RESET}",
-        f"{L} dup or duplicate or enter : duplicate stack 1{RESET}",
-        f"{L} dup2                      : duplicate stack 1 and stack 2{RESET}",
-        f"{L} edit                      : edit stack 1 (for corrections){RESET}",
-        f"{L} depth                     : number of elements in stack.{RESET}",
-        f"{L} avg                       : average of entire stack{RESET}",
-        f"{L} sum                       : sum of entire stack{RESET}",
-        f"{L} rollup                    : rollup entire stack{RESET}",
-        f"{L} rolldown                  : rolldown entire stack{RESET}",
-        f"{L} over                      : copy stack 2 to stack 1 (non-destructive){RESET}",
-        f"{L} pick                      : copy stack[n] to top (n from stack 1, 1-based){RESET}",
+        f"{L} clr                   : clear entire stack{RESET}",
+        f"{L} swap                  : swap stack 2 and stack 1{RESET}",
+        f"{L} drop                  : drop stack 1{RESET}",
+        f"{L} drop2                 : drop stack 1 and stack 2{RESET}",
+        f"{L} dup, duplicate, enter : duplicate stack 1{RESET}",
+        f"{L} dup2                  : duplicate stack 1 and stack 2{RESET}",
+        f"{L} edit                  : edit stack 1 (for corrections){RESET}",
+        f"{L} depth                 : number of elements in stack.{RESET}",
+        f"{L} avg                   : average of entire stack{RESET}",
+        f"{L} save                  : save entire stack to ~/stack.txt{RESET}",
+        f"{L} save {ITALIC}<filename>{RESET}{L}       : save entire stack to ~/<filename>{RESET}",
+        f"{L} sort                  : sort entire stack {RESET}",
+        f"{L} sum                   : sum of entire stack{RESET}",
+        f"{L} rollup                : rollup entire stack{RESET}",
+        f"{L} rolldown              : rolldown entire stack{RESET}",
+        f"{L} over                  : copy stack 2 to stack 1 (non-destructive){RESET}",
+        f"{L} pick                  : copy stack[n] to top (n from stack 1, 1-based){RESET}",
         f"{H}── Sign and basic operation ───────────────────────────────{RESET}",
-        f"{L} neg or chs               : negation{RESET}",
-        f"{L} abs                      : absolute value{RESET}",
-        f"{L} ip or int or integer     : integer of a given value (cut){RESET}",
-        f"{L} fp or frac or fractional : fractional part of a given value{RESET}",
-        f"{L} ceil                     : returns next greater integer{RESET}",
-        f"{L} floor                    : returns next smaller integer{RESET}",
-        f"{L} mod or modulo            : modulo of two numbers in the stack{RESET}",
-        f"{L} ran rand or random       : random number (0 < x < 1){RESET}",
-        f"{L} rnd or round             : Rounds number as specified in level 1{RESET}",
-        f"{L} sign                     : sign of x → -1, 0, or 1{RESET}",
-        f"{L} gcd                      : greatest common divisor{RESET}",
-        f"{L} lcm                      : least common multiple{RESET}",
+        f"{L} neg, chs             : negation{RESET}",
+        f"{L} abs                  : absolute value{RESET}",
+        f"{L} ip, int, integer     : integer of a given value (cut){RESET}",
+        f"{L} fp, frac, fractional : fractional part of a given value{RESET}",
+        f"{L} mant, mantissa       : mantissa of a number{RESET}",
+        f"{L} xpon                 : exponent of argument (floor of log10 of abs value){RESET}",
+        f"{L} ceil                 : returns next greater integer{RESET}",
+        f"{L} floor                : returns next smaller integer{RESET}",
+        f"{L} mod, modulo          : modulo of two numbers in the stack{RESET}",
+        f"{L} ran, rand, random    : random number (0 < x < 1){RESET}",
+        f"{L} rnd, round           : Rounds number as specified in level 1{RESET}",
+        f"{L} sign                 : sign of x → -1, 0, or 1{RESET}",
+        f"{L} gcd                  : greatest common divisor{RESET}",
+        f"{L} lcm                  : least common multiple{RESET}",
         f"{H}── Powers and roots ───────────────────────────────────────{RESET}",
-        f"{L} reci or reciprocal or inv : reciproke (1/𝑥){RESET}",
-        f"{L} pow or power              : exponentiation (yˣ){RESET}",
-        f"{L} sq or square              : square (𝑥²){RESET}",
-        f"{L} sqrt or squareroot        : square root (√𝑥){RESET}",
-        f"{L} root or rt or xroot       : ⁿ√𝑥{RESET}",
-        f"{L} exp                       : eˣ (inverse of ln){RESET}",
-        f"{L} exp10 or alog             : 10ˣ (inverse of log10){RESET}",
+        f"{L} reci, reciprocal, inv : reciproke (1/𝑥){RESET}",
+        f"{L} pow, power            : exponentiation (yˣ){RESET}",
+        f"{L} sq, square            : square (𝑥²){RESET}",
+        f"{L} sqrt, squareroot      : square root (√𝑥){RESET}",
+        f"{L} root, rt, xroot       : ⁿ√𝑥{RESET}",
+        f"{L} exp                   : eˣ (inverse of ln){RESET}",
+        f"{L} exp10, alog           : 10ˣ (inverse of log10){RESET}",
         f"{H}── Logarithms ─────────────────────────────────────────────{RESET}",
-        f"{L} ln                          : natural (base e) logarithm{RESET}",
-        f"{L} log10 or log                : common log (base 10){RESET}",
-        f"{L} log2                        : logarithm base 2{RESET}",
+        f"{L} ln         : natural (base e) logarithm{RESET}",
+        f"{L} log10, log : common log (base 10){RESET}",
+        f"{L} log2       : logarithm base 2{RESET}",
         f"{H}── Trigonometric functions (degrees) ───────────────────────{RESET}",
-        f"{L} atan2                       : atan(y/x) in degrees, stack2=y stack1=x{RESET}",
-        f"{L} sin or sine                 : sine{RESET}",
-        f"{L} sin or sine                 : sine{RESET}",
-        f"{L} sin or sine                 : sine{RESET}",
-        f"{L} cos or cosine               : cosine{RESET}",
-        f"{L} acos or arccosine           : arc cosine{RESET}",
-        f"{L} cosh or cosinushyperbolicus : hyperbolic cosine{RESET}",
-        f"{L} tan or tangent              : tangent{RESET}",
-        f"{L} atan arctangent             : arc tangent{RESET}",
-        f"{L} tanh tangenthyperbolicus    : hyperbolic tangent{RESET}",
+        f"{L} atan2                     : atan(y/x) in degrees, stack2=y stack1=x{RESET}",
+        f"{L} sin, sine                 : sine{RESET}",
+        f"{L} asin, arcsine             : arc sine{RESET}",
+        f"{L} sinh, sinushyperbolicus   : hyperbolic sine{RESET}",
+        f"{L} cos, cosine               : cosine{RESET}",
+        f"{L} acos, arccosine           : arc cosine{RESET}",
+        f"{L} cosh, cosinushyperbolicus : hyperbolic cosine{RESET}",
+        f"{L} tan, tangent              : tangent{RESET}",
+        f"{L} atan arctangent           : arc tangent{RESET}",
+        f"{L} tanh tangenthyperbolicus  : hyperbolic tangent{RESET}",
         f"{H}── Constants ──────────────────────────────────────────────{RESET}",
         f"{L} pi                 : 3.1415927… (π){RESET}",
         f"{L} tau                : 6.2831853… (𝜏 = 2π){RESET}",
@@ -440,7 +450,7 @@ def display_help():
         if p < total_pages - 1:
             print(f"{DARKGRAY}         ↓ more ↓{RESET}")
         print(f"{WHITE}{BOLD}───────────────────────────────────────────────────────────{RESET}")
-        nav = f"[Page {p+1}/{total_pages}] | \u2191: up | \u2193: down | SPACE: scrolldown | q: quit"
+        nav = f"{FOOTER}[Page {p+1}/{total_pages}] | \u2191: up | \u2193: down | SPACE: scrolldown | q: quit{RESET}"
         sys.stdout.write(f"{WHITE}{nav}{RESET}")
         sys.stdout.flush()
 
@@ -460,6 +470,13 @@ def display_help():
             if page > 0:
                 page -= 1
                 draw_page(page)
+        else:
+            # show error unknown key on lowest line for 2 seconds
+            print(f"{WHITE}{BOLD}\n\n\n\nUnknown key: Use arrow keys, space, or 'q' to navigate.\n\n\n\n{RESET}")
+            time.sleep(2)
+            # clear entire screen and redraw current page to remove error message
+            sys.stdout.write(CLS + HOME)
+            draw_page(page)
 
 # -------------------------
 # Text-based UI
@@ -504,6 +521,7 @@ sys.stdout.write(CLEAR_SCROLLBACK)
 sys.stdout.write(CLS + HOME)
 
 while True:
+    error_displayed = False  # Reset error flag at the start of each loop
     try:
         display_ui(input_buffer)
         char = get_char()
@@ -531,7 +549,7 @@ while True:
             elif len(stack) > 0:
                 stack.pop(0)
             else:
-                show_error("Error: Stack is empty")
+                show_error("Error: Stack 1 is empty")
             continue
             
         # SWAP: TAB
@@ -544,9 +562,12 @@ while True:
 
         # CLEAR: CTRL-L
         elif char == "\x0c": # CTRL-L
-            stack = []
-            input_buffer = ""
-            cursor_pos = 0
+            if len(stack) > 0:
+                stack = []
+                input_buffer = ""
+                cursor_pos = 0
+            else:
+                show_error("Error: Stack is already empty")
             continue
 
         # DELETE: DEL key (delete character under cursor, or if at end of buffer, delete top of stack)
@@ -557,7 +578,7 @@ while True:
             elif len(stack) > 0:
                 stack.pop(0)
             else:
-                show_error("Error: Stack is empty")
+                show_error("Error: Stack 1 is empty")
             continue
 
         # CURSOR LEFT: LEFT Key (Puts the cursor one position to the left without deleting characters.)
@@ -599,10 +620,10 @@ while True:
             if len(stack) > 0:
                 stack[0] = -stack[0]
             else:
-                show_error("Error: Stack is empty")
+                show_error("Error: Stack 1 is empty (negate)")
             continue
 
-        # --- INSTANT OPERATORS (+, -, *, /, %, ^) ---
+        # --- INSTANT MATH OPERATORS (+, -, *, /, %, ^) ---
         if char in "+-*/%^":
             # Allow e.g. 1E-3 or 1E+6: if buffer ends with 'e', treat +/- as part of exponent
             if char in "+-" and input_buffer and input_buffer[-1].lower() == "e":
@@ -611,32 +632,45 @@ while True:
                 continue
             if input_buffer:
                 val = to_fixed(input_buffer)
-                if val is not None: stack.insert(0, val)
+                if val is not None:
+                    stack.insert(0, val)
                 input_buffer = ""
                 cursor_pos = 0
 
             # Check if there are at least 2 values on the stack for binary operations
             if len(stack) < 2:
-                show_error("Error: Too few arguments")
+                show_error("Error: Too few arguments for operator")
                 continue
 
-            y, x = stack.pop(0), stack.pop(0)
-            res = None
-            
-            if char == "+": res = x + y
-            elif char == "-": res = x - y
-            elif char == "*": res = (x * y) // SCALE
-            elif char == "/":
-                if y == 0: 
-                    stack.insert(0, x); stack.insert(0, y)
-                    show_error("Error: Div/0")
-                else: res = (x * SCALE) // y
-            elif char == "%": res = (x * y) // (100 * SCALE)
-            elif char == "^": res = int(math.pow(x/SCALE, y/SCALE) * SCALE)
-   
-            
-            if res is not None:
-                stack.insert(0, res)
+            try:
+                y, x = stack.pop(0), stack.pop(0)
+                res = None
+                if char == "+":
+                    res = x + y
+                elif char == "-":
+                    res = x - y
+                elif char == "*":
+                    res = (x * y) // SCALE
+                elif char == "/":
+                    if y == 0:
+                        stack.insert(0, x)
+                        stack.insert(0, y)
+                        show_error("Error: Division by zero")
+                    else:
+                        res = (x * SCALE) // y
+                elif char == "%":
+                    res = (x * y) // (100 * SCALE)
+                elif char == "^":
+                    try:
+                        res = int(math.pow(x/SCALE, y/SCALE) * SCALE)
+                    except ValueError as e:
+                        show_error(f"Error: {e}")
+                        stack.insert(0, x)
+                        stack.insert(0, y)
+                if res is not None:
+                    stack.insert(0, res)
+            except Exception as e:
+                show_error(f"Operator error: {e}")
 
         # --- ENTER KEY (Commands, Functions, Logic) ---
         elif char in ("\r", "\n"):
@@ -661,8 +695,8 @@ while True:
                 stack.pop(1) ; stack.pop(0)
             elif cmd in ("dup", "duplicate", "enter") and len(stack) > 0:
                 stack.insert(0, stack[0])
-            elif cmd in ("dup2", "duplicate", "enter") and len(stack) > 1:
-                stack.insert(2, stack[1]);stack.insert(0, stack[0])
+            elif cmd == "dup2" and len(stack) > 1:
+                stack.insert(0, stack[0]); stack.insert(3, stack[3])
             elif cmd == "over" and len(stack) >= 2:
                 # OVER: copy stack 2 to stack 1 (non-destructive)
                 stack.insert(0, stack[1])
@@ -680,34 +714,23 @@ while True:
                     cursor_pos = len(input_buffer)
                     continue
                 else:
-                    show_error("Error: Stack is empty, edit not possible")
+                    show_error("Error: Stack is empty, editing not possible")
                     continue
-            elif cmd == "fix" and len(stack) > 0:
+            elif cmd in ("fix", "sci", "eng") and len(stack) > 0:
                 n = stack.pop(0) // SCALE
                 if 0 <= n <= SCALE_POW:
                     DISPLAY_DIGITS = n
-                    display_format = "fix"
+                    display_format = cmd
                 else:
-                    show_error(f"Error: invalid fix value {n}")
-            elif cmd == "sci" and len(stack) > 0:
-                n = stack.pop(0) // SCALE
-                if 0 <= n <= SCALE_POW:
-                    DISPLAY_DIGITS = n
-                    display_format = "sci"
-                else:
-                    show_error(f"Error: invalid sci value {n}")
-            elif cmd == "eng" and len(stack) > 0:
-                n = stack.pop(0) // SCALE
-                if 0 <= n <= SCALE_POW:
-                    DISPLAY_DIGITS = n
-                    display_format = "eng"
-                else:
-                    show_error(f"Error: invalid eng value {n}")
+                    show_error(f"Error: invalid {cmd} digits-value {n}. Valid range is 0 to {SCALE_POW}.")
             # show how many elements in stack
             elif cmd== "depth": stack.insert(0, len(stack) * SCALE)
 
-            elif cmd == "sto" and len(stack) > 0:
-                memory_value = stack.pop(0)
+            elif cmd == "sto":
+                if len(stack) > 0:
+                    memory_value = stack.pop(0)
+                else:
+                    show_error("Error: Stack 1 is empty, nothing to store to memory")
             elif cmd in ("rcl","recall"):
                    stack.insert(0,memory_value)
             elif cmd in ("mc", "memclr", "mclear"):
@@ -720,7 +743,7 @@ while True:
                 if 1 <= n <= MAX_DIGITS * 4: # max 124 bits for 31 digits (with some safety margin)
                     setwordsize = n
                 else:
-                    show_error(f"Error: invalid word size {n}")
+                    show_error(f"Error: invalid word size {n}. Valid range is 1 to {MAX_DIGITS * 4} bits.")
             elif cmd in ("rcws", "recallwordsize"):
                 stack.insert(0, setwordsize * SCALE)
             #logical not in dependency of setwordsize
@@ -784,7 +807,7 @@ while True:
             elif cmd in ("sq", "square") and len(stack) > 0:
                 stack[0] = (stack[0] * stack[0]) // SCALE
             elif cmd in ("sqrt", "squareroot") and len(stack) > 0:
-                if stack[0] < 0: show_error("Error: Neg Sqrt")
+                if stack[0] < 0: show_error("Error: Negative Square Root")
                 else: stack[0] = int(math.sqrt(stack[0] / SCALE) * SCALE)
             elif cmd in ("root", "rt", "xroot") and len(stack) >= 2:
                 stack[1] = int((stack[1]/SCALE) ** (1/(stack[0]/SCALE)) * SCALE); stack.pop(0)
@@ -799,6 +822,7 @@ while True:
                 stack[0] = (stack[0] // SCALE) * SCALE
             elif cmd in ("fp", "frac", "fractional") and len(stack) > 0:
                 stack[0] = stack[0] % SCALE
+            
             elif cmd in ("mant", "mantissa") and len(stack) > 0:
                 if stack[0] == 0:
                     stack[0] = 0
@@ -817,11 +841,11 @@ while True:
                 else:
                     stack.insert(0, (x % y) // SCALE * SCALE)
             elif cmd == "pi": stack.insert(0, PI_INT)
-            elif cmd in ("e", "euler"): stack.insert(0, E_INT)
-            elif cmd in ("g", "gravity"): stack.insert(0, G_INT)
+            elif cmd == "euler": stack.insert(0, E_INT)
+            elif cmd == "gravity": stack.insert(0, G_INT)
             elif cmd in ("phi", "goldenratio"): stack.insert(0, PHI_INT)
-            elif cmd in ("c", "lightspeed"): stack.insert(0, C_INT)
-            elif cmd in ("tau"): stack.insert(0, TAU_INT)
+            elif cmd == "lightspeed": stack.insert(0, C_INT)
+            elif cmd == "tau": stack.insert(0, TAU_INT)
             elif cmd in ("sin", "sine") and len(stack) > 0:
                 stack[0] = int(math.sin(math.radians(stack[0]/SCALE)) * SCALE)
             elif cmd in ("asin", "arcsin") and len(stack) > 0:
@@ -840,16 +864,16 @@ while True:
                 stack[0] = int(math.degrees(math.atan(stack[0]/SCALE)) * SCALE)
             elif cmd in ("tanh", "tangenthyperbolicus") and len(stack) > 0:
                 stack[0] = int(math.tanh(stack[0]/SCALE) * SCALE)
-            elif cmd in ("ln") and len(stack) > 0:
+            elif cmd == "ln" and len(stack) > 0:
                 if stack[0] <= 0: show_error("Error: Log Range")
                 else: stack[0] = int(math.log(stack[0]/SCALE) * SCALE)
             elif cmd in ("log10", "log") and len(stack) > 0:
                 if stack[0] <= 0: show_error("Error: Log Range")
                 else: stack[0] = int((math.log(stack[0]/SCALE) / math.log(10)) * SCALE)
-            elif cmd in ("log2") and len(stack) > 0:
+            elif cmd == "log2" and len(stack) > 0:
                 if stack[0] <= 0: show_error("Error: Log Range")
                 else: stack[0] = int((math.log(stack[0]/SCALE) / math.log(2)) * SCALE)
-            elif cmd in ("exp") and len(stack) > 0:
+            elif cmd == "exp" and len(stack) > 0:
                 stack[0] = int(math.exp(stack[0]/SCALE) * SCALE)
             elif cmd in ("exp10", "alog") and len(stack) > 0:
                 stack[0] = int((10 ** (stack[0]/SCALE)) * SCALE)
@@ -859,12 +883,12 @@ while True:
             elif cmd == "xpon" and len(stack) > 0:
                 # XPON: exponent of argument (floor of log10 of abs value)
                 v = abs(stack[0] / SCALE)
-                if v == 0: show_error("Error: XPON undefined for 0")
+                if v == 0: show_error("Error: Exponent undefined for 0")
                 else: stack[0] = int(math.floor(math.log10(v))) * SCALE
-            elif cmd in ("gcd") and len(stack) >= 2:
+            elif cmd == "gcd" and len(stack) >= 2:
                 a, b = abs(stack.pop(0) // SCALE), abs(stack.pop(0) // SCALE)
                 stack.insert(0, math.gcd(a, b) * SCALE)
-            elif cmd in ("lcm") and len(stack) >= 2:
+            elif cmd == "lcm" and len(stack) >= 2:
                 a, b = abs(stack.pop(0) // SCALE), abs(stack.pop(0) // SCALE)
                 stack.insert(0, (a * b // math.gcd(a, b) if math.gcd(a, b) else 0) * SCALE)
             elif cmd == "atan2" and len(stack) >= 2:
@@ -900,6 +924,43 @@ while True:
                 total = sum(stack[i] for i in range(min(len(stack), 10)))
                 count = min(len(stack), 10)
                 stack.insert(0, total // count)
+            # sort entire stack in ascending order and if already, in descending order
+            elif cmd == "sort":
+                if len(stack) > 1:
+                    if all(stack[i] <= stack[i+1] for i in range(len(stack)-1)):
+                        stack.sort(reverse=True)
+                    else:
+                        stack.sort()
+                else:
+                    show_error("Error: nothing to sort here")
+            # save stack
+            #   - save entire stack as values in a text file. 
+            #   - Default path is home directory with filename "stack.txt". This can be
+            #     changed by providing a filename after the "save" command, e.g. "save mystack.txt".
+            #   - If the file already exists, it will be overwritten.
+            elif cmd.startswith("save"):
+                parts = cmd.split(maxsplit=1)
+                # default path is always home, either for provided filename or default "stack.txt"
+                filename = os.path.expanduser(f"~/{parts[1]}") if len(parts) > 1 else os.path.expanduser("~/stack.txt")
+                #filename = parts[1] if len(parts) > 1 else os.path.expanduser("~/stack.txt")
+                try:
+                    with open(filename, "w") as f:
+                        for i in range(min(len(stack), 10)):
+                            val = stack[i]
+                            sign = "-" if val < 0 else ""
+                            abs_val = abs(val)
+                            whole = abs_val // SCALE
+                            frac = abs_val % SCALE
+                            if frac == 0:
+                                f.write(f"{sign}{whole}\n")
+                            else:
+                                frac_str = f"{frac:0{SCALE_POW}d}".rstrip("0")
+                                f.write(f"{sign}{whole}.{frac_str}\n")
+                    print(f"\n{WHITE}Stack saved to: {filename}{RESET}")
+                    time.sleep(3)
+                except Exception as e:
+                    show_error(f"Error saving stack: {e}")
+            
             elif cmd == "sum" and len(stack) > 0:
                 total = sum(stack)
                 stack.insert(0, total)
@@ -935,12 +996,10 @@ while True:
 
             else:
                 val = to_fixed(cmd)
-                if val is not None: stack.insert(0, val)
-                elif cmd: show_error(f"no arguments for '{cmd}' or unknown command")
-            input_buffer = ""
-            cursor_pos = 0
-
-
+                if val is not None:
+                    stack.insert(0, val)
+                elif cmd:
+                    show_error(f"Error: Unknown command or invalid value '{cmd}'")
             input_buffer = ""
             cursor_pos = 0
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7
+
+* improved general error handling and used meaningful error messages
+* `sort` command to sort entire stack in ascending order and if already, in descending order
+* `save` command to save entire stack to ~/stack.txt in decimal values
+
 ## v1.6
 
 * more detailed help supporting full terminal size
