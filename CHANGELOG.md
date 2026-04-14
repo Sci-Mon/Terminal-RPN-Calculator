@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.8
+
+* majorcode restructuring. This calculator has grown up since the in initial release and the code was
+  getting more and more messy and unreadable.
+* various length conversions
+* notation with exponential numbers corrected (e.g. 3e6, 1.5E4, 5.2e-3, 1E+6, 3E-5 …)
+* bugfix `edit` and CTRL-E now work as expected
+
 ## v1.7
 
 * improved general error handling and used meaningful error messages

@@ -103,11 +103,11 @@ commands are executed by typing in and hit *ENTER*. This might feel rather like 
 #### General commands 📢️
 
 * `exit`or `quit` or just `off` followed by hitting the *ENTER*-key to leave the rpn calculator.
-* `help` or `hlp` to get a quite detailed help.
+* `help` or `?` or `hlp` to get a quite detailed help.
 * `about` or `info` to get a little bit info about myself, the calculator and the license
 * `refresh` to clear a destroyed UI.
 * hitting the *ENTER*-key, the stack 1 value in the stack gets duplicated.
-* hitting the *ENTER*-key after a command is performing it.
+* hitting the *ENTER*-key after a command is performing the command.
 
 #### Stack commands 📑
 
@@ -203,9 +203,9 @@ The following functions can be used followed by hitting *ENTER*:
 
 The following constants are implemented for now and can be entered followed by hitting *ENTER*:
 
-* `pi` : 3.1415927… (π)
-* `tau`: 6.2831853… (𝜏 = 2π)
-* `c` or `lightspeed`: 299792458 m/s (𝑐)
+* `pi` : circle constant (π = 3.1415927…)
+* `tau`: "true" circle constant (𝜏 = 2π = 6.2831853…)
+* `c` or `lightspeed`: speed of light in a vacuum (𝑐) 299792458 m/s
 * `euler` : 2.7182818… (ℯ)
 * `gravity` or `g`: 9.80665m/s² (𝑔)
 * `phy`or `goldenratio`: 1.6180339887… (φ = (1 + √5) / 2)
@@ -238,7 +238,7 @@ The following constants are implemented for now and can be entered followed by h
 
 The notation of a hexadecimal or binary number can be typed in as follows:
 
-* decimal notation of exponential numbers: (e.g. 3e6, 1.5E4, 5.2e-3, …)
+* decimal notation of exponential numbers: (e.g. 3e6, 1.5E4, 5.2e-3, 1E+6, 3E-5 …)
 * binary: e.g.: `0b1111`, `0b10101010`, …
 * hexadecimal : e.g. like `0xabcd`, `0xAFAEBD`, … or directly without leading 0b or 0x.
 
@@ -250,10 +250,58 @@ The notation of a hexadecimal or binary number can be typed in as follows:
 
 #### Conversion Modes 🪄
 
+##### angle conversions
+
 * deg2rad or d\>r or deg\>rad → Degrees-to-radians conversion.
 * rad2deg or r\>d or rad\>deg → radians → degrees
+
+##### time conversions
+
 * \>hms or 2hms → decimal hours → H.MMSSss
 * \>h or 2hours → H.MMSSss → decimal hours
+
+##### length conversions
+
+###### english conversions
+
+* inch2cm, inch\>cm           : inches → centimeters
+* cm2inch, cm\>inch           : centimeters → inches
+* inch2mm, inch\>mm           : inches → millimeters
+* mm2inch, mm\>inch           : millimeters → inches
+* inch2m, inch\>m             : inches → meters
+* m2inch, m\>inch             : meters → inches
+* foot2m, foot\>m             : feet → meters
+* m2foot, m\>foot             : meters → feet{RESET}
+* mile2km, mile\>km           : miles → kilometers
+* km2mile, km\>mile           : kilometers → miles
+* mile2m, mile\>m             : miles → meters
+* m2mile, m\>mile             : meters → miles
+* seamile2km, seamile\>km     : miles → kilometers
+* km2seamile, km\>seamile     : kilometers → miles
+
+###### metric conversions
+
+* km2m, km\>m                 : kilometers → meters
+* m2km, m\>km                 : meters → kilometers
+* m2cm, m\>cm                 : meters → centimeters
+* cm2m, cm\>m                 : centimeters → meters
+* m2mm, m\>mm                 : meters → millimeters
+* mm2m, mm\>m                 : millimeters → meters
+
+###### japanese conversions
+
+* sun2m, sun\>m                 : sun → meters
+* m2sun, m\>sun                 : meters → sun
+* ken2m, ken\>m                 : ken → meters
+* m2ken, m\>ken                 : meters → ken
+* shaku2m, shaku\>m             : shaku → meters
+* m2shaku, m\>shaku             : meters → shaku
+* shaku2cm, shaku\>cm           : shaku → centimeters
+* cm2shaku, cm\>shaku           : centimeters → shaku
+* shaku2mm, shaku\>mm           : shaku → millimeters
+* mm2shaku, mm\>shaku           : millimeters → shaku
+* ri2m, ri\>m                   : ri → meters
+* m2ri, m\>ri                   : meters → ri
 
 ### Limitations ▲ ▼
 
@@ -294,4 +342,4 @@ The following features are on my to do list:
 
 Errors and bugs are possibly included.
 Error reports or corrections are welcome:
-✉️  [sery(at)solnet.ch](mailto:sery&#x40;solnet.ch)
+✉️  [sery&#x40;solnet.ch](mailto:sery&#x40;solnet.ch)
