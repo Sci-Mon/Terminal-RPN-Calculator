@@ -57,7 +57,7 @@ else:
 # =============================================================================
 
 APPNAME = "Terminal RPN Calculator"
-VERSION = "v1.8"
+VERSION = "v1.8.1"
 AUTHOR  = "Simon Widmer"
 EMAIL   = "sery\x40solnet.ch"
 
@@ -82,6 +82,7 @@ ERASEDOWN        = "\x1b[0J"
 WHITE            = "\x1b[97m"
 RED              = "\x1b[91m"
 LIGHTGRAY        = "\x1b[37m"
+MEDIUMGRAY       = "\x1b[90;1m"
 DARKGRAY         = "\x1b[90m"
 FOOTER           = "\x1b[7m"
 
@@ -340,17 +341,17 @@ def display_ui(buffer_text):
             buffer_text (str): The text to display in the input buffer.
     """
     sys.stdout.write(CURSORHIDE + CLEAR_SCROLLBACK + HOME)
-    print(f"{LIGHTGRAY}CTRL-N for help, CTRL-X to exit{RESET}")
+    print(f"{MEDIUMGRAY} CTRL-N for help, CTRL-X to exit{RESET}")
     print(f"{WHITE}┌──────────────────────────────────────────────┐{RESET}")
-    print(f"{WHITE}│{BOLD}{WHITE}{APPNAME} {VERSION}{RESET}{WHITE}                  │{RESET}")
+    print(f"{WHITE}│{BOLD}{WHITE} {APPNAME} {VERSION}{RESET}{WHITE}               │{RESET}")
     print(f"{WHITE}├──────────────────────────────────────────────┤{RESET}")
 
     # Show top 4 stack levels (level 1 at bottom, level 4 at top)
     for i in range(3, -1, -1):
         val_str      = format_val(stack[i]) if i < len(stack) else ""
-        label        = f" {i+1}: "
+        label        = f" {LIGHTGRAY}{i+1}:{RESET}{WHITE} "
         display_line = "{:<4}{:>42}".format(label, val_str)
-        print(f"{WHITE}│{LIGHTGRAY}{display_line}{RESET}{WHITE}│{RESET}")
+        print(f"{WHITE}│{display_line}│{RESET}")
 
     print(f"{WHITE}└──────────────────────────────────────────────┘{RESET}")
 
@@ -403,37 +404,39 @@ def display_help():
     """Show the paginated help screen. Navigate with arrow keys / space, quit with 'q'."""
     H = f"{BOLD}{LIGHTGRAY}"
     L = LIGHTGRAY
+    D = DARKGRAY
     HELP_LINES = [
         f"{H}┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓{RESET}",
         f"{H}┃  HELP MENU                                              ┃{RESET}",
         f"{H}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛{RESET}",
         f"{H}── Hotkeys ────────────────────────────────────────────────{RESET}",
-        f"{L} CTRL-X    : exit {APPNAME}{RESET}",
-        f"{L} CTRL-L    : clears entire stack{RESET}",
-        f"{L} BACKSPACE : drop stack 1{RESET}",
-        f"{L} DEL       : drop stack 1{RESET}",
-        f"{L} CTRL-K    : drop actual input > {RESET}",
-        f"{L} TAB       : swap stack 1 and stack 2{RESET}",
-        f"{L} ENTER     : duplicate stack 1 (if input is empty){RESET}",
-        f"{L} CTRL-E    : edit stack 1{RESET}",
-        f"{L} CTRL-N    : help{RESET}",
+        f"{L} CTRL-X      : exit {APPNAME}{RESET}",
+        f"{L} CTRL-L      : clears entire stack{RESET}",
+        f"{L} BACKSPACE   : drop stack 1{RESET}",
+        f"{L} DEL         : drop stack 1{RESET}",
+        f"{L} CTRL-K      : drop actual input > {RESET}",
+        f"{L} TAB         : swap stack 1 and stack 2{RESET}",
+        f"{L} ENTER       : duplicate stack 1 (if input is empty){RESET}",
+        f"{L} CTRL-E      : edit stack 1{RESET}",
+        f"{L} CTRL-N or ? : help{RESET}",
         f"{H}── Commands ───────────────────────────────────────────────{RESET}",
         f"{L} exit, quit, off : exit {APPNAME}{RESET}",
-        f"{L} help, ?         : show this help{RESET}",
+        f"{L} help            : show this help{RESET}",
         f"{L} about, info     : about dialog{RESET}",
         f"{L} mem             : show available mem of OS{RESET}",
         f"{L} refresh         : refresh user interface{RESET}",
+        f"{D} getkey          : check key code (debugging only){RESET}",
         f"{H}── Instantaneous Arithmetic Operations ────────────────────{RESET}",
-        f"{L} +  : addition. Returns stack 2 + stack 1{RESET}",
-        f"{L} -  : subtraction. Returns stack 2 - stack 1{RESET}",
-        f"{L} *  : multiplication. Returns stack 2 * stack 1{RESET}",
-        f"{L} /  : division. Returns stack 2 / stack 1{RESET}",
-        f"{L} %  : percentage. Returns stack 2 % stack 1{RESET}",
-        f"{L} ^  : exponention (yˣ). Returns stack 2 ^ stack 1{RESET}",
-        f"{L} _  : changes the sign of a number (+/-). Returns -stack 1{RESET}",
+        f"{L} +       : addition. Returns stack 2 + stack 1{RESET}",
+        f"{L} -       : subtraction. Returns stack 2 - stack 1{RESET}",
+        f"{L} *       : multiplication. Returns stack 2 * stack 1{RESET}",
+        f"{L} / or :  : division. Returns stack 2 / stack 1{RESET}",
+        f"{L} %       : percentage. Returns stack 2 % stack 1{RESET}",
+        f"{L} ^       : exponention (yˣ). Returns stack 2 ^ stack 1{RESET}",
+        f"{L} _       : changes the sign of a number (+/-). Returns -stack 1{RESET}",
         f"{H}── Stack Operations ───────────────────────────────────────{RESET}",
         f"{L} clr                   : clear entire stack{RESET}",
-        f"{L} swap                  : swap stack 2 and stack 1{RESET}",
+        f"{L} swap, swp, x<>y       : swap stack 2 and stack 1{RESET}",
         f"{L} drop                  : drop stack 1{RESET}",
         f"{L} drop2                 : drop stack 1 and stack 2{RESET}",
         f"{L} dup, duplicate, enter : duplicate stack 1{RESET}",
@@ -452,13 +455,16 @@ def display_help():
         f"{H}── Sign and basic operation ───────────────────────────────{RESET}",
         f"{L} neg, chs             : negation{RESET}",
         f"{L} abs                  : absolute value{RESET}",
+        f"{L} comb, combination(s) : combination of two numbers{RESET}",
         f"{L} ip, int, integer     : integer of a given value (cut){RESET}",
+        f"{L} fact, factorial      : factorial of a given value (x! = Γ(x + 1)){RESET}",
         f"{L} fp, frac, fractional : fractional part of a given value{RESET}",
         f"{L} mant, mantissa       : mantissa of a number{RESET}",
         f"{L} xpon                 : exponent of argument (floor of log10 of abs value){RESET}",
         f"{L} ceil                 : returns next greater integer{RESET}",
         f"{L} floor                : returns next smaller integer{RESET}",
         f"{L} mod, modulo          : modulo of two numbers in the stack{RESET}",
+        f"{L} perm, permutation(s) : permutation of two numbers{RESET}",
         f"{L} ran, rand, random    : random number (0 < x < 1){RESET}",
         f"{L} rnd, round           : Rounds number as specified in level 1{RESET}",
         f"{L} sign                 : sign of x → -1, 0, or 1{RESET}",
@@ -472,7 +478,9 @@ def display_help():
         f"{L} root, rt, xroot       : ⁿ√𝑥{RESET}",
         f"{L} exp                   : eˣ (inverse of ln){RESET}",
         f"{L} exp10, alog           : 10ˣ (inverse of log10){RESET}",
+        f"{L} expm                 : eˣ - 1 (more accurate for small x){RESET}",
         f"{H}── Logarithms ─────────────────────────────────────────────{RESET}",
+        f"{L} alog       : common (base 10) antilogarithm (10ˣ){RESET}",
         f"{L} ln         : natural (base e) logarithm{RESET}",
         f"{L} log10, log : common log (base 10){RESET}",
         f"{L} log2       : logarithm base 2{RESET}",
@@ -522,6 +530,13 @@ def display_help():
         f"{L} {UNDERLINE}angle-conversions{RESET}",
         f"{L}    deg2rad or d>r or deg>rad : Degrees-to-radians conversion.{RESET}",
         f"{L}    rad2deg or r>d or rad>deg : radians → degrees{RESET}",
+        f"{L} {UNDERLINE}temperature-conversions{RESET}",
+        f"{L}    c2f or c>f or celsius>fahrenheit : Celsius → Fahrenheit{RESET}",
+        f"{L}    f2c or f>c or fahrenheit>celsius : Fahrenheit → Celsius{RESET}",
+        f"{L}    c2k or c>k or celsius>kelvin : Celsius → Kelvin{RESET}",
+        f"{L}    k2c or k>c or kelvin>celsius : Kelvin → Celsius{RESET}",
+        f"{L}    f2k or f>k or fahrenheit>kelvin : Fahrenheit → Kelvin{RESET}",
+        f"{L}    k2f or k>f or kelvin>fahrenheit : Kelvin → Fahrenheit{RESET}",
         f"{L} {UNDERLINE}time-conversions{RESET}",
         f"{L}    >hms or 2hms   : decimal hours → H.MMSSss{RESET}",
         f"{L}    >h   or 2hours : H.MMSSss → decimal hours{RESET}",
@@ -639,7 +654,7 @@ def handle_instant_operator(char):
             res = x - y
         elif char == "*":
             res = (x * y) // SCALE
-        elif char == "/":
+        elif char in "/:":      # division operator "/" or ":"
             if y == 0:
                 stack.insert(0, x)
                 stack.insert(0, y)
@@ -679,7 +694,7 @@ def execute_command(cmd):
         return False  # Signal exit
 
     # --- UI helpers ---
-    elif cmd in ("help", "hlp", "?"):
+    elif cmd in ("help", "hlp"):
         display_help()
     elif cmd in ("about", "info"):
         display_about()
@@ -694,7 +709,7 @@ def execute_command(cmd):
     # --- Stack operations ---
     elif cmd in ("clr", "clear"):
         stack = []
-    elif cmd in ("swap", "swp") and len(stack) >= 2:
+    elif cmd in ("swap", "swp", "x<>y") and len(stack) >= 2:
         stack[0], stack[1] = stack[1], stack[0]
     elif cmd == "drop" and len(stack) > 0:
         stack.pop(0)
@@ -732,8 +747,11 @@ def execute_command(cmd):
         else:
             show_error("Error: Stack is empty, editing not possible")
     elif cmd == "depth":
+        if len(stack) > 0:
         # Push the number of elements currently on the stack
-        stack.insert(0, len(stack) * SCALE)
+            stack.insert(0, len(stack) * SCALE)
+        else:
+            show_error("Error: Stack is empty, depth is zero")
     elif cmd in ("rollup", "rup"):
         if len(stack) < 2:
             show_error("Error: Too few arguments")
@@ -809,11 +827,66 @@ def execute_command(cmd):
     elif cmd in ("mc", "memclr", "mclear"):
         memory_value = 0
 
+
+    # --- Debug commands
+    elif cmd == "getkey":
+        print("\nPress any key to see its code (ESC for special keys):")
+        ch = get_char()
+        if ch == '\x1b':
+            print(f"Key code: {repr(ch)} (ESCAPE sequence)")
+        else:
+            print(f"Key code: {repr(ch)}")
+        input("Press Enter to continue...")
+    
+    # --- basic operations as commands ---
+    elif cmd in ("plus", "add"):
+        if len(stack) >= 2:
+            stack[1] = stack[1] + stack[0]
+            stack.pop(0)
+        else:
+            show_error("Error: Too few arguments for addition")
+    elif cmd in ("minus", "subtract"):
+        if len(stack) >= 2:
+            stack[1] = stack[1] - stack[0]
+            stack.pop(0)
+        else:
+            show_error("Error: Too few arguments for subtraction")
+    elif cmd in ("mul", "multiply", "times"):
+        if len(stack) >= 2:
+            stack[1] = (stack[1] * stack[0]) // SCALE
+            stack.pop(0)
+        else:
+            show_error("Error: Too few arguments for multiplication")
+    elif cmd in ("div", "divide"):
+        if len(stack) >= 2:
+            if stack[0] == 0:
+                show_error("Error: Division by zero")
+            else:
+                stack[1] = (stack[1] * SCALE) // stack[0]
+                stack.pop(0)
+        else:
+            show_error("Error: Too few arguments for division")
     # --- Sign and basic numeric operations ---
     elif cmd in ("chs", "neg") and len(stack) > 0:
         stack[0] = -stack[0]
     elif cmd in ("abs", "absolute") and len(stack) > 0:
         stack[0] = abs(stack[0])
+    elif cmd in ("comb", "combination", "combinations"):
+        if len(stack) >= 2:
+            r, n = stack.pop(0) // SCALE, stack.pop(0) // SCALE
+            if n < 0 or r < 0:
+                show_error("Error: Negative input for combination")
+                stack.insert(0, r * SCALE)
+                stack.insert(0, n * SCALE)
+            elif r > n:
+                show_error("Error: r cannot be greater than n in combination")
+                stack.insert(0, r * SCALE)
+                stack.insert(0, n * SCALE)
+            else:
+                comb = math.factorial(n) // (math.factorial(r) * math.factorial(n - r))
+                stack.insert(0, comb * SCALE)
+        else:
+            show_error("Error: Too few arguments for combination")
     elif cmd in ("ip", "int", "integer") and len(stack) > 0:
         # Integer part (truncate toward zero)
         stack[0] = (stack[0] // SCALE) * SCALE
@@ -838,6 +911,22 @@ def execute_command(cmd):
             show_error("Error: Div/0")
         else:
             stack.insert(0, (x % y) // SCALE * SCALE)
+    elif cmd in ("perm", "permutation", "permutations"):
+        if len(stack) >= 2:
+            r, n = stack.pop(0) // SCALE, stack.pop(0) // SCALE
+            if n < 0 or r < 0:
+                show_error("Error: Negative input for permutation")
+                stack.insert(0, r * SCALE)
+                stack.insert(0, n * SCALE)
+            elif r > n:
+                show_error("Error: r cannot be greater than n in permutation")
+                stack.insert(0, r * SCALE)
+                stack.insert(0, n * SCALE)
+            else:
+                perm = math.factorial(n) // math.factorial(n - r)
+                stack.insert(0, perm * SCALE)
+        else:
+            show_error("Error: Too few arguments for permutation")
     elif cmd == "sign" and len(stack) > 0:
         v       = stack[0]
         stack[0] = (1 if v > 0 else -1 if v < 0 else 0) * SCALE
@@ -860,6 +949,17 @@ def execute_command(cmd):
         a, b = abs(stack.pop(0) // SCALE), abs(stack.pop(0) // SCALE)
         g    = math.gcd(a, b)
         stack.insert(0, (a * b // g if g else 0) * SCALE)
+    elif cmd in ("factorial", "fact"):
+        if len(stack) > 0:
+            n = stack[0] // SCALE
+            if n < 0:
+                show_error("Error: Factorial of negative number not defined")
+            elif n > 10000:
+                show_error("Error: Factorial input too large")
+            else:
+                stack[0] = math.factorial(n) * SCALE
+        else:
+            show_error("Error: Stack 1 is empty, factorial not possible")
 
     # --- Powers and roots ---
     elif cmd in ("sq", "square") and len(stack) > 0:
@@ -882,6 +982,13 @@ def execute_command(cmd):
             stack[0] = (SCALE * SCALE) // stack[0]
 
     # --- Logarithms ---
+    # Common (base 10) antilogarithm. Returns 10^(stack 1). Inverse of log10.
+    elif cmd == "alog":
+        if len(stack) > 0:
+            stack[0] = int((10 ** (stack[0] / SCALE)) * SCALE)
+        else:
+            show_error("Error: Stack 1 is empty, alog not possible")
+
     elif cmd == "ln" and len(stack) > 0:
         if stack[0] <= 0:
             show_error("Error: Log Range")
@@ -901,7 +1008,11 @@ def execute_command(cmd):
         stack[0] = int(math.exp(stack[0] / SCALE) * SCALE)
     elif cmd in ("exp10", "alog") and len(stack) > 0:
         stack[0] = int((10 ** (stack[0] / SCALE)) * SCALE)
-
+    elif cmd == "expm":
+        if len(stack) > 0:
+            stack[0] = int((math.exp(stack[0] / SCALE) - 1) * SCALE)
+        else:
+            show_error("Error: Stack 1 is empty, expm not possible")
     # --- Trigonometric functions (input/output in degrees) ---
     elif cmd in ("sin", "sine") and len(stack) > 0:
         stack[0] = int(math.sin(math.radians(stack[0] / SCALE)) * SCALE)
@@ -931,6 +1042,38 @@ def execute_command(cmd):
         stack[0] = int(math.radians(stack[0] / SCALE) * SCALE)
     elif cmd in ("rad2deg", "r>d", "rad>deg") and len(stack) > 0:
         stack[0] = int(math.degrees(stack[0] / SCALE) * SCALE)
+
+    # --- Temperature conversions ---
+    elif cmd in ("c2f", "c>f", "°c2°f", "°c>°f", "celsius2fahrenheit") and len(stack) > 0:
+        if stack[0] < -273.15 * SCALE:
+            show_error("Error: Temperature below absolute zero")
+        else:
+            stack[0] = int(((stack[0] / SCALE) * 9 / 5 + 32) * SCALE)
+    elif cmd in ("f2c", "f>c", "°f2°c", "°f>°c", "fahrenheit2celsius") and len(stack) > 0:
+        if stack[0] < -459.67 * SCALE:
+            show_error("Error: Temperature below absolute zero")
+        else:
+            stack[0] = int(((stack[0] / SCALE) - 32) * 5 / 9 * SCALE)
+    elif cmd in ("c2k", "c>k", "°c2°k", "°c>°k", "celsius2kelvin") and len(stack) > 0:
+        if stack[0] < -273.15 * SCALE:
+            show_error("Error: Temperature below absolute zero")
+        else:
+            stack[0] = int(((stack[0] / SCALE) + 273.15) * SCALE)
+    elif cmd in ("k2c", "k>c", "°k2°c", "°k>°c", "kelvin2celsius") and len(stack) > 0:
+        if stack[0] < 0:
+            show_error("Error: Temperature below absolute zero")
+        else:
+            stack[0] = int(((stack[0] / SCALE) - 273.15) * SCALE)
+    elif cmd in ("f2k", "f>k", "°f2°k", "°f>°k", "fahrenheit2kelvin") and len(stack) > 0:
+        if stack[0] < -459.67 * SCALE:
+            show_error("Error: Temperature below absolute zero")
+        else:
+            stack[0] = int((((stack[0] / SCALE) - 32) * 5 / 9 + 273.15) * SCALE)
+    elif cmd in ("k2f", "k>f", "°k2°f", "°k>°f", "kelvin2fahrenheit") and len(stack) > 0:
+        if stack[0] < 0:
+            show_error("Error: Temperature below absolute zero")
+        else:
+            stack[0] = int((((stack[0] / SCALE) - 273.15) * 9 / 5 + 32) * SCALE)
 
     # --- Time conversions ---
     elif cmd in ("2hms", ">hms") and len(stack) > 0:
@@ -1105,11 +1248,7 @@ def execute_command(cmd):
     # --- System info ---
     elif cmd in ("memory", "mem"):
         # Push available system memory in bytes
-        if sys.platform == "win32":
-            import psutil
-            mem = psutil.virtual_memory()
-            stack.insert(0, int(mem.available * SCALE))
-        elif sys.platform == "linux":
+        if sys.platform == "linux":
             with open("/proc/meminfo", "r") as f:
                 for line in f:
                     if line.startswith("MemAvailable:"):
@@ -1147,7 +1286,7 @@ def handle_hotkey(char):
         return "exit"
 
     # HELP: CTRL-N
-    if char == "\x0e":
+    if char == "\x0e" or char == "?":
         display_help()
         input_buffer = ""
         cursor_pos   = 0
@@ -1228,6 +1367,9 @@ def handle_hotkey(char):
             show_error("Error: Stack is empty")
         return "continue"
 
+
+        
+
     return None  # Not a hotkey
 
 
@@ -1268,7 +1410,7 @@ while True:
             continue
 
         # --- Instant arithmetic operators: + - * / % ^ ---
-        if char in "+-*/%^":
+        if char in "+-*/%^:":
             consumed = handle_instant_operator(char)
             if consumed:
                 continue

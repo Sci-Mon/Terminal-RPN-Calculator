@@ -1,12 +1,32 @@
 # Changelog
 
+## v1.8.1
+
+* introduction of minor versions
+* introduction of `make` as installer with a simple `Makefile`
+* man page by the help of pandoc and `make`
+* chapter *special thanks* in *README.md*
+* temperature conversions
+* command `getkey` to check the key code (used for debugging purposes only)
+* command `perm` or `permutation(s)` to calculate the number of permutations of two numbers in the stack (nPr)
+* command `comb` or `combination(s)` to calculate the number of combinations of two numbers in the stack (nCr)
+* command `swp` or `x<>y` to swap stack 1 and stack 2 (added additionally to the already existing `swap` command)
+
 ## v1.8
 
-* majorcode restructuring. This calculator has grown up since the in initial release and the code was
-  getting more and more messy and unreadable.
+* major code restructuring: This calculator has grown up since the in initial release and the code was
+  getting more and more messy and unreadable. Still, it is spaghetti code with all its if's and elseif's and should be improved urgently although it is working stable.
+* created Make file to install rpn-calc and a man page.
 * various length conversions
 * notation with exponential numbers corrected (e.g. 3e6, 1.5E4, 5.2e-3, 1E+6, 3E-5 …)
 * bugfix `edit` and CTRL-E now work as expected
+* Changed font "Quicksand Medium" in `rpn-calc.svg` into objects so the  appearance remains the same on all platforms without having this font installed.
+* created the first binaries stored under `bin/` for Windows.
+* defined ? as hotkey for help instead of a command.
+* new function `alog` for common (base 10) antilogarithm (10ˣ)
+* new function `expm` for eˣ - 1 (more accurate for small x)
+* instant operator for division is now also ":" in addition to "/"
+* changed color behaviour: stack numbering is "lightgrey" now and stack entries are bright white. (seems to work only within windows command shell)
 
 ## v1.7
 

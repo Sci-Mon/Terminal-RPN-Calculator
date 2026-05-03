@@ -1,21 +1,24 @@
 ---
 title: Terminal RPN Calculator
 subtitle: "an RPN calculator shell for the terminal"
+section: 1
 author: Simon Widmer
-date: 07.04.2026
+date: 03.05.2026
 lang: en
 license: GNU GPL3
 cover-image: rpn-calc.svg
 description: "an RPN calculator for the terminal"
+header: RPN
+footer: RPN
 ---
 
 # Terminal RPN Calculator
 
+> an RPN calculator shell for the terminal
+
 ## ![RPN CALC LOGO](rpn-calc.svg)
 
-an RPN calculator shell for the terminal
-
----
+![Screenshot.png](Screenshot.png)
 
 ## Preface and history 📜
 
@@ -33,11 +36,17 @@ Again, keep in mind: This is not the real and famous HP42S™ or HP48SX™ that 
 
 * Run `sudo apt install python3` for Debian. Installation for other distributions may vary. There is no other dependencies.
 * run `./rpn.py` to start the calculator 🚀
+* to install it permanently including man page, run
+  * `apt install pandoc`
+  * `make`
+  * `sudo make install`
+* to uninstall it, run `sudo make uninstall`
 
 ### Windows installation 🪟️
 
 * install [python](https://www.python.org/downloads/windows/) (Tested with Windows 11 only)
 * use `run.bat` to start the calculator or open a cmd-shell and execute `py ./rpn.py` 🚀
+* Occasionally, I create an executable file, which can also be used and makes installing Python unnecessary. It is stored in the `bin/` directory.
 
 ## Usage 💡
 
@@ -58,7 +67,7 @@ Don't use this calculator if you plan to fly to the moon. I'm not kidding — ex
 ```text
 CTRL-N for help, CTRL-X to exit
 ┌──────────────────────────────────────────────┐
-│Terminal RPN Calculator vX.x                  │
+│ Terminal RPN Calculator vX.x.x               │
 ├──────────────────────────────────────────────┤
 │ 4:                                           │
 │ 3:                                         64│
@@ -73,14 +82,14 @@ Example Text User interface above with some numbers entered in the visible stack
 ### Hotkeys ⌨️
 
 * CTRL-X → exit
-* CTRL-L → clears
+* CTRL-L → clears entire stack
 * BACKSPACE →drop stack 1
 * DEL → drop stack 1
 * CTRL-K → drop actual input >
 * TAB → swap stack 1 and stack 2
-* ENTER → duplicate stack 1 (if input is empty)
+* ENTER → duplicate stack 1 (if input is empty) else perform the operation or function
 * CTRL-E → edit stack 1
-* CTRL-N → help
+* CTRL-N or ? → help
 
 **Hint (ℹ):** If a hotkey is not working, this is most likely due to the terminal shell in use and it's predefined hotkeys. Workaround: enter the according command at the input prompt and hit *ENTER*.
 
@@ -102,17 +111,16 @@ commands are executed by typing in and hit *ENTER*. This might feel rather like 
 
 #### General commands 📢️
 
-* `exit`or `quit` or just `off` followed by hitting the *ENTER*-key to leave the rpn calculator.
+* `exit` or `quit` or just `off` followed by hitting the *ENTER*-key to leave the rpn calculator.
 * `help` or `?` or `hlp` to get a quite detailed help.
 * `about` or `info` to get a little bit info about myself, the calculator and the license
 * `refresh` to clear a destroyed UI.
-* hitting the *ENTER*-key, the stack 1 value in the stack gets duplicated.
-* hitting the *ENTER*-key after a command is performing the command.
+* *`getkey` to check the key code (used for debugging purposes only)*
 
 #### Stack commands 📑
 
 * `clr` or `clear` will clear the entire stack.
-* `swap` will swap stack 1 and 2.
+* `swap` or `swp` or `x<>y` will swap stack 1 and 2.
 * `drop` will delete stack 1.
 * `drop2` will delete stack 1 and stack 2.
 * `dup` or `duplicate` or `enter` will duplicate stack 1
@@ -133,12 +141,12 @@ commands are executed by typing in and hit *ENTER*. This might feel rather like 
 
 As with the real rpn calculators, hitting the operators does execute an *immediate* operation. You do NOT have to hit the *ENTER*-key to do so.
 
-* `+` → addition
-* `-` → subtraction
-* `*` → multiplication
-* `/` → division
+* `+` or `plus` → addition
+* `-` or `minus` → subtraction
+* `*` or `mul` → multiplication
+* `/` or `:` or `div` → division
 * `%` → percentage
-* `^` → exponentiation (yˣ)
+* `^` or `pow` → exponentiation (yˣ)
 * `_` → changes the sign of a number (+/-)
 
 #### Math functions ƒ(𝑥)
@@ -148,13 +156,16 @@ The following functions can be used followed by hitting *ENTER*:
 * Sign and basic operation ⊕/⊖
   * `neg` or `chs` → negation
   * `abs`→ absolute value
+  * `comb` or `combination(s)` → returns the number of combinations of two numbers in the stack (nCr)
   * `ip` or `int` or `integer` → integer of a given value (by cutting, not rounding)
   * `mant` or `mantissa` → mantissa of a number
   * `xpon` → exponent of argument (floor of log10 of abs value)
+  * `fact` or `factorial` → factorial (x! = Γ(x + 1)). Note that the returned value can be very high, as the factorial grows very fast.
   * `frac` or `frac` or `fractional` → fractional part of a number (x - ip(x))
   * `ceil` → returns next greater integer
   * `floor` → returns next smaller integer
   * `mod` or `modulo` → returns modulo of two numbers in the stack
+  * `perm` or `permutation(s)` → returns the number of permutations of two numbers in the stack (nPr)
   * `ran` `rand` or `random` → returns random number `0 < x < 1`
   * `rnd` or `round` → Rounds number as specified in level 1.
   * `sign` → sign of x → -1, 0, or 1
@@ -168,6 +179,7 @@ The following functions can be used followed by hitting *ENTER*:
   * `root` or `rt` or `xroot` → ⁿ√𝑥
   * `exp` → eˣ (inverse of ln)
   * `exp10` or `alog` → 10ˣ (inverse of log10)
+  * `expm` → eˣ - 1 (more accurate for small x)
 * Logarithms 📏
   * `ln`  → natural (base e) logarithm
   * `log10` or `log` → common logarithm (base 10)
@@ -242,7 +254,7 @@ The notation of a hexadecimal or binary number can be typed in as follows:
 * binary: e.g.: `0b1111`, `0b10101010`, …
 * hexadecimal : e.g. like `0xabcd`, `0xAFAEBD`, … or directly without leading 0b or 0x.
 
-💬Further notice:
+Further notice 💬:
 
 * **Mixing decimal, hexadecimal and binary values in the stack is not possible.**
 * if in decimal mode, all entered values with leading `0x`, `0b` or `0o` are directly converted into the decimal value.
@@ -252,56 +264,67 @@ The notation of a hexadecimal or binary number can be typed in as follows:
 
 ##### angle conversions
 
-* deg2rad or d\>r or deg\>rad → Degrees-to-radians conversion.
-* rad2deg or r\>d or rad\>deg → radians → degrees
+* `deg2rad` or `d\>r or deg\>rad → Degrees-to-radians conversion.
+* `rad2deg` or `r\>d or rad\>deg → radians → degrees
+
+##### temperature conversions
+
+* `c2f` or `c>f` or `°c2°f` or `°c>°f` or `celsius2fahrenheit` : Celsius → Fahrenheit
+* `f2c` or `f>c` or `°f2°c` or `°f>°c` or `fahrenheit2celsius` : Fahrenheit → Celsius
+* `c2k` or `c>k` or `°c2°k` or `°c>°k` or `celsius2kelvin` : Celsius → Kelvin
+* `k2c` or `k>c` or `°k2°c` or `°k>°c` or `kelvin2celsius` : Kelvin → Celsius
+* `f2k` or `f>k` or `°f2°k` or `°f>°k` or `fahrenheit2kelvin` : Fahrenheit → Kelvin
+* `k2f` or `k>f` or `°k2°f` or `°k>°f` or `kelvin2fahrenheit` : Kelvin → Fahrenheit
+
+Note that values below absolute zero (-273.15°C, -459.67°F or 0 K) are returned as error.
 
 ##### time conversions
 
-* \>hms or 2hms → decimal hours → H.MMSSss
-* \>h or 2hours → H.MMSSss → decimal hours
+* `>hms` or `2hms` → decimal hours → H.MMSSss
+* `>h` or `2hours` → H.MMSSss → decimal hours
 
 ##### length conversions
 
 ###### english conversions
 
-* inch2cm, inch\>cm           : inches → centimeters
-* cm2inch, cm\>inch           : centimeters → inches
-* inch2mm, inch\>mm           : inches → millimeters
-* mm2inch, mm\>inch           : millimeters → inches
-* inch2m, inch\>m             : inches → meters
-* m2inch, m\>inch             : meters → inches
-* foot2m, foot\>m             : feet → meters
-* m2foot, m\>foot             : meters → feet{RESET}
-* mile2km, mile\>km           : miles → kilometers
-* km2mile, km\>mile           : kilometers → miles
-* mile2m, mile\>m             : miles → meters
-* m2mile, m\>mile             : meters → miles
-* seamile2km, seamile\>km     : miles → kilometers
-* km2seamile, km\>seamile     : kilometers → miles
+* `inch2cm` or `inch>cm`           : inches → centimeters
+* `cm2inch` or `cm>inch`           : centimeters → inches
+* `inch2mm` or `inch>mm`           : inches → millimeters
+* `mm2inch` or `mm>inch`           : millimeters → inches
+* `inch2m` or `inch>m`             : inches → meters
+* `m2inch` or `m>inch`             : meters → inches
+* `foot2m` or `foot>m`             : feet → meters
+* `m2foot` or `m>foot`             : meters → feet{RESET}
+* `mile2km` or `mile>km`           : miles → kilometers
+* `km2mile` or `km>mile`           : kilometers → miles
+* `mile2m` or `mile>m`             : miles → meters
+* `m2mile` or `m>mile`             : meters → miles
+* `seamile2km` or `seamile>km`     : miles → kilometers
+* `km2seamile` or `km>seamile`     : kilometers → miles
 
 ###### metric conversions
 
-* km2m, km\>m                 : kilometers → meters
-* m2km, m\>km                 : meters → kilometers
-* m2cm, m\>cm                 : meters → centimeters
-* cm2m, cm\>m                 : centimeters → meters
-* m2mm, m\>mm                 : meters → millimeters
-* mm2m, mm\>m                 : millimeters → meters
+* `km2m` or `km>m`                 : kilometers → meters
+* `m2km` or `m>km`                 : meters → kilometers
+* `m2cm` or `m>cm`                 : meters → centimeters
+* `cm2m` or `cm>m`                 : centimeters → meters
+* `m2mm` or `m>mm`                 : meters → millimeters
+* `mm2m` or `mm>m`                 : millimeters → meters
 
 ###### japanese conversions
 
-* sun2m, sun\>m                 : sun → meters
-* m2sun, m\>sun                 : meters → sun
-* ken2m, ken\>m                 : ken → meters
-* m2ken, m\>ken                 : meters → ken
-* shaku2m, shaku\>m             : shaku → meters
-* m2shaku, m\>shaku             : meters → shaku
-* shaku2cm, shaku\>cm           : shaku → centimeters
-* cm2shaku, cm\>shaku           : centimeters → shaku
-* shaku2mm, shaku\>mm           : shaku → millimeters
-* mm2shaku, mm\>shaku           : millimeters → shaku
-* ri2m, ri\>m                   : ri → meters
-* m2ri, m\>ri                   : meters → ri
+* `sun2m` or `sun>m`                 : sun → meters
+* `m2sun` or `m>sun`                 : meters → sun
+* `ken2m` or `ken>m`                 : ken → meters
+* `m2ken` or `m>ken`                 : meters → ken
+* `shaku2m` or `shaku>m`             : shaku → meters
+* `m2shaku` or `m>shaku`             : meters → shaku
+* `shaku2cm` or `shaku>cm`           : shaku → centimeters
+* `cm2shaku` or `cm>shaku`           : centimeters → shaku
+* `shaku2mm` or `shaku>mm`           : shaku → millimeters
+* `mm2shaku` or `mm>shaku`           : millimeters → shaku
+* `ri2m` or `ri>m`                   : ri → meters
+* `m2ri` or `m>ri`                   : meters → ri
 
 ### Limitations ▲ ▼
 
@@ -322,24 +345,43 @@ I'm developing this pocket calculator in my spare time, so you'll notice that ma
 
 For the moment, I do not have intentions to implement these features. There might be other apropriate tools to use.
 
-### To Do's 🚧
+### To Do's and Niceties 🚧
 
 The following features are on my to do list:
 
 * missing commands 🕵️
+  * incr, decr (increment and decrement stack 1 by 1)
   * sto stack as array elements
   * beep
-  * bytes
   * date and time functions (date, date+, ddays)
-  * dropn
-  * dupn, pickn
   * key (would be nice for debugging new hotkeys)
-  * lnp1 Natural logarithm of (x + 1).
   * max, min, maxr, minr
   * sto+-/* (are those useful commands?)
+* missing but cool features 🌟
+  * getting track of command-history to implement hotkey "↑" (up) to recall the commands for the "shell-feeling"
+  * autocompletion and suggestions
+  * status of stored value
 
 ## Error reporting 🐛
 
 Errors and bugs are possibly included.
 Error reports or corrections are welcome:
 ✉️  [sery&#x40;solnet.ch](mailto:sery&#x40;solnet.ch)
+
+## Special Thanks 🤝
+
+* Jan Łukasiewicz for inventing [RPN](https://en.wikipedia.org/wiki/Reverse_Polish_notation).
+* Bill Joy for his eternal editor [vi](https://en.wikipedia.org/wiki/Vi_(text_editor)) and Bram Moolenaar et al for [Vim](https://www.vim.org), the improved Version of vi for Linux and other platforms.
+* Chris Kempson for the wonderful and calm colorscheme [Tomorrow-Night-Blue.vim](https://github.com/chriskempson/tomorrow-theme/blob/master/vim/colors/Tomorrow-Night-Blue.vim).
+* John Gruber in collaboration with Aaron Swartz for [Markdown](https://commonmark.org)
+* John MacFarlane for the document conversion tool [pandoc](https://github.com/jgm/pandoc/tree/main) that seems to be from outer space with all its functionality.
+* Hewlett Packard for the great [calculators](https://en.wikipedia.org/wiki/HP_calculators) (that can be programmed with [RPL](https://en.wikipedia.org/wiki/RPL_(programming_language))) over all the years.
+* Bob Bemer for the invention of [ANSI Escape Code](https://en.wikipedia.org/wiki/ANSI_escape_code) that is still supported on many platforms including Windows 11. Unbelievable after all those years!
+* Guido van Rossum for inventing the [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) programming language.
+* Ken Thompson, Dennis Ritchie, Brian Kernighan, Douglas McIlroy and Joe Ossanna for inventing the [Unix](https://en.wikipedia.org/wiki/Unix) operating system and all the developers who contributed to the Unix ecosystem. Without Unix, Linux would possibly have never been invented.
+* Richard Stallman for inventing the [GNU](https://en.wikipedia.org/wiki/GNU) operating system and all the developers who contributed to the GNU ecosystem. Without GNU, Linux would be just a kernel and not a full operating system.
+* Linus Torvalds for inventing the [Linux](https://en.wikipedia.org/wiki/Linux) operating system kernel and all the developers who contributed to the Linux ecosystem.
+
+## see also
+
+**bc**(1), **dc**(1)
