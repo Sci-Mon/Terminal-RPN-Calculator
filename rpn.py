@@ -57,13 +57,13 @@ else:
 # =============================================================================
 
 APPNAME = "Terminal RPN Calculator"
-VERSION = "v1.8.1"
+VERSION = "v1.9"
 AUTHOR  = "Simon Widmer"
 EMAIL   = "sery\x40solnet.ch"
 
 
 # =============================================================================
-# VT100 ESCAPE SEQUENCES
+# VT100 ESCAPE SEQUENCES & SHELL CONFIGURATION
 # =============================================================================
 
 CLS              = "\x1b[2J"
@@ -79,14 +79,15 @@ CURSORRIGHT      = "\033[C"
 CLEAR_SCROLLBACK = "\x1b[3J"
 ERASELINE        = "\x1b[2K"
 ERASEDOWN        = "\x1b[0J"
-WHITE            = "\x1b[97m"
-RED              = "\x1b[91m"
-LIGHTGRAY        = "\x1b[37m"
-MEDIUMGRAY       = "\x1b[90;1m"
-DARKGRAY         = "\x1b[90m"
+FAILURE          = "\x1b[7m"
 FOOTER           = "\x1b[7m"
-
-
+# Try to get terminal size for pagination and formatting. 
+try:
+    PAGE_SIZE   = os.get_terminal_size().lines - 1
+    PAGE_WIDTH  = os.get_terminal_size().columns
+except OSError:
+    PAGE_SIZE  = 23  # default page size if terminal size cannot be determined
+    PAGE_WIDTH = 80  # default page width if terminal size cannot be determined
 # =============================================================================
 # CONFIGURATION & CALCULATOR STATE
 # =============================================================================
@@ -130,7 +131,7 @@ def show_error(msg):
     """Display an error message for 2 seconds. Only fires once per input cycle."""
     global error_displayed
     if not error_displayed:
-        sys.stdout.write(f"\r\n{BOLD}{RED}{msg}{RESET}")
+        sys.stdout.write(f"\r\n{BOLD}{FAILURE}{msg}{RESET}")
         sys.stdout.flush()
         time.sleep(2)
         error_displayed = True
@@ -341,19 +342,21 @@ def display_ui(buffer_text):
             buffer_text (str): The text to display in the input buffer.
     """
     sys.stdout.write(CURSORHIDE + CLEAR_SCROLLBACK + HOME)
-    print(f"{MEDIUMGRAY} CTRL-N for help, CTRL-X to exit{RESET}")
-    print(f"{WHITE}┌──────────────────────────────────────────────┐{RESET}")
-    print(f"{WHITE}│{BOLD}{WHITE} {APPNAME} {VERSION}{RESET}{WHITE}               │{RESET}")
-    print(f"{WHITE}├──────────────────────────────────────────────┤{RESET}")
+    #print(f"{FOOTER} CTRL-N for help, CTRL-X to exit {RESET}")
+    print(f"{FOOTER}{' CTRL-N for help, CTRL-X to exit'.ljust(PAGE_WIDTH)}{RESET}", end="")
+
+    print(f"┌──────────────────────────────────────────────┐{RESET}")
+    print(f"│{BOLD} {APPNAME} {VERSION}{RESET}                 │{RESET}")
+    print(f"├──────────────────────────────────────────────┤{RESET}")
 
     # Show top 4 stack levels (level 1 at bottom, level 4 at top)
     for i in range(3, -1, -1):
         val_str      = format_val(stack[i]) if i < len(stack) else ""
-        label        = f" {LIGHTGRAY}{i+1}:{RESET}{WHITE} "
+        label        = f" {i+1}:{RESET} "
         display_line = "{:<4}{:>42}".format(label, val_str)
-        print(f"{WHITE}│{display_line}│{RESET}")
+        print(f"│{display_line}│{RESET}")
 
-    print(f"{WHITE}└──────────────────────────────────────────────┘{RESET}")
+    print(f"└──────────────────────────────────────────────┘{RESET}")
 
     # Build the input prompt with active mode indicators
     mode_parts = []
@@ -363,7 +366,7 @@ def display_ui(buffer_text):
         mode_parts.append(display_format)
     suffix = f" ({', '.join(mode_parts)})" if mode_parts else ""
     line   = f"input{suffix} > {buffer_text}"
-    sys.stdout.write(f"{ERASELINE}{WHITE}{line}{RESET}{ERASEDOWN}")
+    sys.stdout.write(f"{ERASELINE}{line}{RESET}{ERASEDOWN}")
 
     # Reposition cursor to the correct character within the input buffer
     move_left = len(buffer_text) - cursor_pos
@@ -378,17 +381,18 @@ def display_ui(buffer_text):
 
 def display_about():
     """Show the About screen. Press 'q' to return."""
+    w = PAGE_WIDTH - 2
     sys.stdout.write(HOME + CURSORHIDE + ERASEDOWN)
-    print(f"{WHITE}{BOLD}┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓{RESET}")
-    print(f"{WHITE}{BOLD}┃ ABOUT {APPNAME} {VERSION}{RESET}{WHITE}                                    ┃{RESET}")
-    print(f"{WHITE}{BOLD}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛{RESET}")
-    print(f"\n Author:       {LIGHTGRAY}{AUTHOR}{RESET}")
-    print(f"\n Email:        {LIGHTGRAY}{EMAIL}{RESET}")
-    print(f"\n Description:  {LIGHTGRAY}A simple yet feature-rich RPN calculator for the terminal.{RESET}")
-    print(f"               {LIGHTGRAY}Written to be useful, not fancy and cluttered.{RESET}")
-    print(f"\n License:      {LIGHTGRAY}GNU General Public License v3.0 or later{RESET}")
-    print(f"{LIGHTGRAY}─────────────────────────────────────────────────────────────────────────{RESET}")
-    print(f"{FOOTER}q: quit                                                                  {RESET}")
+    print(f"{BOLD}┏{'━' * w}┓{RESET}")
+    print(f"{BOLD}{f'┃ ABOUT {APPNAME} {VERSION}'.ljust(PAGE_WIDTH - 1)}┃{RESET}")
+    print(f"{BOLD}┗{'━' * w}┛{RESET}")
+    print(f"\n Author:       {AUTHOR}{RESET}")
+    print(f"\n Email:        {EMAIL}{RESET}")
+    print(f"\n Description:  A simple yet feature-rich RPN calculator for the terminal.{RESET}")
+    print(f"                 Written to be useful, not fancy and cluttered.{RESET}")
+    print(f"\n License:      GNU General Public License v3.0 or later{RESET}\n")
+
+    print(f"{FOOTER}{' q: quit'.ljust(PAGE_WIDTH)}{RESET}")
     sys.stdout.write(CURSORSHOW)
 
     # Wait for 'q' to return to main UI
@@ -402,183 +406,181 @@ def display_about():
 
 def display_help():
     """Show the paginated help screen. Navigate with arrow keys / space, quit with 'q'."""
-    H = f"{BOLD}{LIGHTGRAY}"
-    L = LIGHTGRAY
-    D = DARKGRAY
+    H = f"{BOLD}"
+    w = PAGE_WIDTH - 2
     HELP_LINES = [
-        f"{H}┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓{RESET}",
-        f"{H}┃  HELP MENU                                              ┃{RESET}",
-        f"{H}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛{RESET}",
-        f"{H}── Hotkeys ────────────────────────────────────────────────{RESET}",
-        f"{L} CTRL-X      : exit {APPNAME}{RESET}",
-        f"{L} CTRL-L      : clears entire stack{RESET}",
-        f"{L} BACKSPACE   : drop stack 1{RESET}",
-        f"{L} DEL         : drop stack 1{RESET}",
-        f"{L} CTRL-K      : drop actual input > {RESET}",
-        f"{L} TAB         : swap stack 1 and stack 2{RESET}",
-        f"{L} ENTER       : duplicate stack 1 (if input is empty){RESET}",
-        f"{L} CTRL-E      : edit stack 1{RESET}",
-        f"{L} CTRL-N or ? : help{RESET}",
-        f"{H}── Commands ───────────────────────────────────────────────{RESET}",
-        f"{L} exit, quit, off : exit {APPNAME}{RESET}",
-        f"{L} help            : show this help{RESET}",
-        f"{L} about, info     : about dialog{RESET}",
-        f"{L} mem             : show available mem of OS{RESET}",
-        f"{L} refresh         : refresh user interface{RESET}",
-        f"{D} getkey          : check key code (debugging only){RESET}",
-        f"{H}── Instantaneous Arithmetic Operations ────────────────────{RESET}",
-        f"{L} +       : addition. Returns stack 2 + stack 1{RESET}",
-        f"{L} -       : subtraction. Returns stack 2 - stack 1{RESET}",
-        f"{L} *       : multiplication. Returns stack 2 * stack 1{RESET}",
-        f"{L} / or :  : division. Returns stack 2 / stack 1{RESET}",
-        f"{L} %       : percentage. Returns stack 2 % stack 1{RESET}",
-        f"{L} ^       : exponention (yˣ). Returns stack 2 ^ stack 1{RESET}",
-        f"{L} _       : changes the sign of a number (+/-). Returns -stack 1{RESET}",
-        f"{H}── Stack Operations ───────────────────────────────────────{RESET}",
-        f"{L} clr                   : clear entire stack{RESET}",
-        f"{L} swap, swp, x<>y       : swap stack 2 and stack 1{RESET}",
-        f"{L} drop                  : drop stack 1{RESET}",
-        f"{L} drop2                 : drop stack 1 and stack 2{RESET}",
-        f"{L} dup, duplicate, enter : duplicate stack 1{RESET}",
-        f"{L} dup2                  : duplicate stack 1 and stack 2{RESET}",
-        f"{L} edit                  : edit stack 1 (for corrections){RESET}",
-        f"{L} depth                 : number of elements in stack.{RESET}",
-        f"{L} avg                   : average of entire stack{RESET}",
-        f"{L} save                  : save entire stack to ~/stack.txt{RESET}",
-        f"{L} save {ITALIC}<filename>{RESET}{L}       : save entire stack to ~/<filename>{RESET}",
-        f"{L} sort                  : sort entire stack {RESET}",
-        f"{L} sum                   : sum of entire stack{RESET}",
-        f"{L} rollup                : rollup entire stack{RESET}",
-        f"{L} rolldown              : rolldown entire stack{RESET}",
-        f"{L} over                  : copy stack 2 to stack 1 (non-destructive){RESET}",
-        f"{L} pick                  : copy stack[n] to top (n from stack 1, 1-based){RESET}",
-        f"{H}── Sign and basic operation ───────────────────────────────{RESET}",
-        f"{L} neg, chs             : negation{RESET}",
-        f"{L} abs                  : absolute value{RESET}",
-        f"{L} comb, combination(s) : combination of two numbers{RESET}",
-        f"{L} ip, int, integer     : integer of a given value (cut){RESET}",
-        f"{L} fact, factorial      : factorial of a given value (x! = Γ(x + 1)){RESET}",
-        f"{L} fp, frac, fractional : fractional part of a given value{RESET}",
-        f"{L} mant, mantissa       : mantissa of a number{RESET}",
-        f"{L} xpon                 : exponent of argument (floor of log10 of abs value){RESET}",
-        f"{L} ceil                 : returns next greater integer{RESET}",
-        f"{L} floor                : returns next smaller integer{RESET}",
-        f"{L} mod, modulo          : modulo of two numbers in the stack{RESET}",
-        f"{L} perm, permutation(s) : permutation of two numbers{RESET}",
-        f"{L} ran, rand, random    : random number (0 < x < 1){RESET}",
-        f"{L} rnd, round           : Rounds number as specified in level 1{RESET}",
-        f"{L} sign                 : sign of x → -1, 0, or 1{RESET}",
-        f"{L} gcd                  : greatest common divisor{RESET}",
-        f"{L} lcm                  : least common multiple{RESET}",
-        f"{H}── Powers and roots ───────────────────────────────────────{RESET}",
-        f"{L} reci, reciprocal, inv : reciproke (1/𝑥){RESET}",
-        f"{L} pow, power            : exponentiation (yˣ){RESET}",
-        f"{L} sq, square            : square (𝑥²){RESET}",
-        f"{L} sqrt, squareroot      : square root (√𝑥){RESET}",
-        f"{L} root, rt, xroot       : ⁿ√𝑥{RESET}",
-        f"{L} exp                   : eˣ (inverse of ln){RESET}",
-        f"{L} exp10, alog           : 10ˣ (inverse of log10){RESET}",
-        f"{L} expm                 : eˣ - 1 (more accurate for small x){RESET}",
-        f"{H}── Logarithms ─────────────────────────────────────────────{RESET}",
-        f"{L} alog       : common (base 10) antilogarithm (10ˣ){RESET}",
-        f"{L} ln         : natural (base e) logarithm{RESET}",
-        f"{L} log10, log : common log (base 10){RESET}",
-        f"{L} log2       : logarithm base 2{RESET}",
-        f"{H}── Trigonometric functions (degrees) ───────────────────────{RESET}",
-        f"{L} atan2                     : atan(y/x) in degrees, stack2=y stack1=x{RESET}",
-        f"{L} sin, sine                 : sine{RESET}",
-        f"{L} asin, arcsine             : arc sine{RESET}",
-        f"{L} sinh, sinushyperbolicus   : hyperbolic sine{RESET}",
-        f"{L} cos, cosine               : cosine{RESET}",
-        f"{L} acos, arccosine           : arc cosine{RESET}",
-        f"{L} cosh, cosinushyperbolicus : hyperbolic cosine{RESET}",
-        f"{L} tan, tangent              : tangent{RESET}",
-        f"{L} atan arctangent           : arc tangent{RESET}",
-        f"{L} tanh tangenthyperbolicus  : hyperbolic tangent{RESET}",
-        f"{H}── Constants ──────────────────────────────────────────────{RESET}",
-        f"{L} pi                 : 3.1415927… (π){RESET}",
-        f"{L} tau                : 6.2831853… (𝜏 = 2π){RESET}",
-        f"{L} c or lightspeed    : 299792458 m/s (𝑐){RESET}",
-        f"{L} euler              : 2.7182818… (ℯ){RESET}",
-        f"{L} gravity or g       : 9.80665m/s² (𝑔){RESET}",
-        f"{L} phy or goldenratio : 1.6180339887… (φ = (1 + √5) / 2){RESET}",
-        f"{H}── Logic ──────────────────────────────────────────────────{RESET}",
-        f"{L} setwordsize or stws    : sets word size for logic ops{RESET}",
-        f"{L}                          default word size is 64 bits{RESET}",
-        f"{L} recallwordsize or rcws : recalls word size to stack{RESET}",
-        f"{L} and                    : bitwise AND{RESET}",
-        f"{L} or                     : bitwise OR{RESET}",
-        f"{L} xor                    : bitwise XOR{RESET}",
-        f"{L} not                    : bitwise NOT{RESET}",
-        f"{L} sl or lsl              : logical shift left 1 bit{RESET}",
-        f"{L} sr or lsr              : logical shift right 1 bit{RESET}",
-        f"{L} slb                    : shift left 1 byte (8 bits){RESET}",
-        f"{L} srb                    : shift right 1 byte (8 bits){RESET}",
-        f"{L} asr                    : arithmetic shift right (sign bit replicated){RESET}",
-        f"{L} rl                     : rotate left 1 bit{RESET}",
-        f"{L} rr                     : rotate right 1 bit{RESET}",
-        f"{L} rlb                    : rotate left 1 byte (8 bits){RESET}",
-        f"{L} rrb                    : rotate right 1 byte (8 bits){RESET}",
-        f"{H}── Memory ─────────────────────────────────────────────────{RESET}",
-        f"{L} sto : stores stack 1 to memory{RESET}",
-        f"{L} rcl : recalls stored value to stack 1{RESET}",
-        f"{L} mc  : clears memory{RESET}",
-        f"{H}── Display Modes ──────────────────────────────────────────{RESET}",
-        f"{L} Base:    dec, hex, oct, bin{RESET}",
-        f"{L} Format:  fix {ITALIC}(default){RESET}{L}, sci, eng {ITALIC}(e.g. 4 sci){RESET}",
-        f"{H}── Conversions ────────────────────────────────────────────{RESET}",
-        f"{L} {UNDERLINE}angle-conversions{RESET}",
-        f"{L}    deg2rad or d>r or deg>rad : Degrees-to-radians conversion.{RESET}",
-        f"{L}    rad2deg or r>d or rad>deg : radians → degrees{RESET}",
-        f"{L} {UNDERLINE}temperature-conversions{RESET}",
-        f"{L}    c2f or c>f or celsius>fahrenheit : Celsius → Fahrenheit{RESET}",
-        f"{L}    f2c or f>c or fahrenheit>celsius : Fahrenheit → Celsius{RESET}",
-        f"{L}    c2k or c>k or celsius>kelvin : Celsius → Kelvin{RESET}",
-        f"{L}    k2c or k>c or kelvin>celsius : Kelvin → Celsius{RESET}",
-        f"{L}    f2k or f>k or fahrenheit>kelvin : Fahrenheit → Kelvin{RESET}",
-        f"{L}    k2f or k>f or kelvin>fahrenheit : Kelvin → Fahrenheit{RESET}",
-        f"{L} {UNDERLINE}time-conversions{RESET}",
-        f"{L}    >hms or 2hms   : decimal hours → H.MMSSss{RESET}",
-        f"{L}    >h   or 2hours : H.MMSSss → decimal hours{RESET}",
-        f"{L} {UNDERLINE}english length-conversions{RESET}",
-        f"{L}    inch2cm    or inch>cm    : inches → centimeters{RESET}",
-        f"{L}    cm2inch    or cm>inch    : centimeters → inches{RESET}",
-        f"{L}    inch2mm    or inch>mm    : inches → millimeters{RESET}",
-        f"{L}    mm2inch    or mm>inch    : millimeters → inches{RESET}",
-        f"{L}    inch2m     or inch>m     : inches → meters{RESET}",
-        f"{L}    m2inch     or m>inch     : meters → inches{RESET}",
-        f"{L}    foot2m     or foot>m     : feet → meters{RESET}",
-        f"{L}    m2foot     or m>foot     : meters → feet{RESET}",
-        f"{L}    mile2km    or mile>km    : miles → kilometers{RESET}",
-        f"{L}    km2mile    or km>mile    : kilometers → miles{RESET}",
-        f"{L}    mile2m     or mile>m     : miles → meters{RESET}",
-        f"{L}    m2mile     or m>mile     : meters → miles{RESET}",
-        f"{L}    seamile2km or seamile>km : miles → kilometers{RESET}",
-        f"{L}    km2seamile or km>seamile : kilometers → miles{RESET}",
-        f"{L} {UNDERLINE}metric length-conversions{RESET}",
-        f"{L}    km2m  or  km>m : kilometers → meters{RESET}",
-        f"{L}    m2km  or  m>km : meters → kilometers{RESET}",
-        f"{L}    cm2m  or  cm>m : centimeters → meters{RESET}",
-        f"{L}    m2cm  or  m>cm : meters → centimeters{RESET}",
-        f"{L}    mm2m  or  mm>m : millimeters → meters{RESET}",
-        f"{L}    m2mm  or  m>mm : meters → millimeters{RESET}",
-        f"{L} {UNDERLINE}japanese length-conversions{RESET}",
-        f"{L}    sun2m     or  sun>m    : shaku → meters{RESET}",
-        f"{L}    m2sun     or  m>sun    : meters → shaku{RESET}",
-        f"{L}    ken2m     or  ken>m    : ken → meters{RESET}",
-        f"{L}    m2ken     or  m>ken    : meters → ken{RESET}",
-        f"{L}    shaku2m   or  shaku>m  : shaku → meters{RESET}",
-        f"{L}    m2shaku   or  m>shaku  : meters → shaku{RESET}",
-        f"{L}    shaku2cm  or  shaku>cm : shaku → centimeters{RESET}",
-        f"{L}    cm2shaku  or  cm>shaku : centimeters → shaku{RESET}",
-        f"{L}    shaku2mm  or  shaku>mm : shaku → millimeters{RESET}",
-        f"{L}    mm2shaku  or  mm>shaku : millimeters → shaku{RESET}",
-        f"{L}    ri2m      or  ri>m     : ri → meters{RESET}",
-        f"{L}    m2ri      or  m>ri     : meters → ri{RESET}",
+        f"{H}┏{'━' * w}┓{RESET}",
+        f"{H}┃{' HELP MENU'.ljust(w)}┃{RESET}",
+        f"{H}┗{'━' * w}┛{RESET}",
+        f"{H}{'── Hotkeys ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" CTRL-X      : exit {APPNAME}{RESET}",
+        f" CTRL-L      : clears entire stack{RESET}",
+        f" BACKSPACE   : drop stack 1{RESET}",
+        f" DEL         : drop stack 1{RESET}",
+        f" CTRL-K      : drop actual input > {RESET}",
+        f" TAB         : swap stack 1 and stack 2{RESET}",
+        f" ENTER       : duplicate stack 1 (if input is empty){RESET}",
+        f" CTRL-E      : edit stack 1{RESET}",
+        f" CTRL-N or ? : help{RESET}",
+        f"{H}{'── Commands ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" exit, quit, off : exit {APPNAME}{RESET}",
+        f" help            : show this help{RESET}",
+        f" about, info     : about dialog{RESET}",
+        f" mem             : show available mem of OS{RESET}",
+        f" refresh         : refresh user interface{RESET}",
+        f" getkey          : check key code (debugging only){RESET}",
+        f"{H}{'── Instantaneous Arithmetic Operations ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" +       : addition. Returns stack 2 + stack 1{RESET}",
+        f" -       : subtraction. Returns stack 2 - stack 1{RESET}",
+        f" *       : multiplication. Returns stack 2 * stack 1{RESET}",
+        f" / or :  : division. Returns stack 2 / stack 1{RESET}",
+        f" %       : percentage. Returns stack 2 % stack 1{RESET}",
+        f" ^       : exponention (yˣ). Returns stack 2 ^ stack 1{RESET}",
+        f" _       : changes the sign of a number (+/-). Returns -stack 1{RESET}",
+        f"{H}{'── Stack Operations ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" clr                   : clear entire stack{RESET}",
+        f" swap, swp, x<>y       : swap stack 2 and stack 1{RESET}",
+        f" drop                  : drop stack 1{RESET}",
+        f" drop2                 : drop stack 1 and stack 2{RESET}",
+        f" dup, duplicate, enter : duplicate stack 1{RESET}",
+        f" dup2                  : duplicate stack 1 and stack 2{RESET}",
+        f" edit                  : edit stack 1 (for corrections){RESET}",
+        f" depth                 : number of elements in stack.{RESET}",
+        f" avg                   : average of entire stack{RESET}",
+        f" save                  : save entire stack to ~/stack.txt{RESET}",
+        f" save {ITALIC}<filename>{RESET}       : save entire stack to ~/<filename>{RESET}",
+        f" sort                  : sort entire stack {RESET}",
+        f" sum                   : sum of entire stack{RESET}",
+        f" rollup                : rollup entire stack{RESET}",
+        f" rolldown              : rolldown entire stack{RESET}",
+        f" over                  : copy stack 2 to stack 1 (non-destructive){RESET}",
+        f" pick                  : copy stack[n] to top (n from stack 1, 1-based){RESET}",
+        f"{H}{'── Sign and basic operation ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" neg, chs             : negation{RESET}",
+        f" abs                  : absolute value{RESET}",
+        f" comb, combination(s) : combination of two numbers{RESET}",
+        f" ip, int, integer     : integer of a given value (cut){RESET}",
+        f" fact, factorial      : factorial of a given value (x! = Γ(x + 1)){RESET}",
+        f" fp, frac, fractional : fractional part of a given value{RESET}",
+        f" mant, mantissa       : mantissa of a number{RESET}",
+        f" xpon                 : exponent of argument (floor of log10 of abs value){RESET}",
+        f" ceil                 : returns next greater integer{RESET}",
+        f" floor                : returns next smaller integer{RESET}",
+        f" mod, modulo          : modulo of two numbers in the stack{RESET}",
+        f" perm, permutation(s) : permutation of two numbers{RESET}",
+        f" ran, rand, random    : random number (0 < x < 1){RESET}",
+        f" rnd, round           : Rounds number as specified in level 1{RESET}",
+        f" sign                 : sign of x → -1, 0, or 1{RESET}",
+        f" gcd                  : greatest common divisor{RESET}",
+        f" lcm                  : least common multiple{RESET}",
+        f"{H}{'── Powers and roots ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" reci, reciprocal, inv : reciproke (1/𝑥){RESET}",
+        f" pow, power            : exponentiation (yˣ){RESET}",
+        f" sq, square            : square (𝑥²){RESET}",
+        f" sqrt, squareroot      : square root (√𝑥){RESET}",
+        f" root, rt, xroot       : ⁿ√𝑥{RESET}",
+        f" exp                   : eˣ (inverse of ln){RESET}",
+        f" exp10, alog           : 10ˣ (inverse of log10){RESET}",
+        f" expm                 : eˣ - 1 (more accurate for small x){RESET}",
+        f"{H}{'── Logarithms ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" alog       : common (base 10) antilogarithm (10ˣ){RESET}",
+        f" ln         : natural (base e) logarithm{RESET}",
+        f" log10, log : common log (base 10){RESET}",
+        f" log2       : logarithm base 2{RESET}",
+        f"{H}{'── Trigonometric functions (degrees) ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" atan2                     : atan(y/x) in degrees, stack2=y stack1=x{RESET}",
+        f" sin, sine                 : sine{RESET}",
+        f" asin, arcsine             : arc sine{RESET}",
+        f" sinh, sinushyperbolicus   : hyperbolic sine{RESET}",
+        f" cos, cosine               : cosine{RESET}",
+        f" acos, arccosine           : arc cosine{RESET}",
+        f" cosh, cosinushyperbolicus : hyperbolic cosine{RESET}",
+        f" tan, tangent              : tangent{RESET}",
+        f" atan arctangent           : arc tangent{RESET}",
+        f" tanh tangenthyperbolicus  : hyperbolic tangent{RESET}",
+        f"{H}{'── Constants ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" pi                 : 3.1415927… (π){RESET}",
+        f" tau                : 6.2831853… (𝜏 = 2π){RESET}",
+        f" c or lightspeed    : 299792458 m/s (𝑐){RESET}",
+        f" euler              : 2.7182818… (ℯ){RESET}",
+        f" gravity or g       : 9.80665m/s² (𝑔){RESET}",
+        f" phy or goldenratio : 1.6180339887… (φ = (1 + √5) / 2){RESET}",
+        f"{H}{'── Logic ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" setwordsize or stws    : sets word size for logic ops{RESET}",
+        f"                          default word size is 64 bits{RESET}",
+        f" recallwordsize or rcws : recalls word size to stack{RESET}",
+        f" and                    : bitwise AND{RESET}",
+        f" or                     : bitwise OR{RESET}",
+        f" xor                    : bitwise XOR{RESET}",
+        f" not                    : bitwise NOT{RESET}",
+        f" sl or lsl              : logical shift left 1 bit{RESET}",
+        f" sr or lsr              : logical shift right 1 bit{RESET}",
+        f" slb                    : shift left 1 byte (8 bits){RESET}",
+        f" srb                    : shift right 1 byte (8 bits){RESET}",
+        f" asr                    : arithmetic shift right (sign bit replicated){RESET}",
+        f" rl                     : rotate left 1 bit{RESET}",
+        f" rr                     : rotate right 1 bit{RESET}",
+        f" rlb                    : rotate left 1 byte (8 bits){RESET}",
+        f" rrb                    : rotate right 1 byte (8 bits){RESET}",
+        f"{H}{'── Memory ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" sto : stores stack 1 to memory{RESET}",
+        f" rcl : recalls stored value to stack 1{RESET}",
+        f" mc  : clears memory{RESET}",
+        f"{H}{'── Display Modes ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" Base:    dec, hex, oct, bin{RESET}",
+        f" Format:  fix {ITALIC}(default){RESET}, sci, eng {ITALIC}(e.g. 4 sci){RESET}",
+        f"{H}{'── Conversions ──'.ljust(PAGE_WIDTH, '─')}{RESET}",
+        f" {UNDERLINE}angle-conversions{RESET}",
+        f"    deg2rad or d>r or deg>rad : Degrees-to-radians conversion.{RESET}",
+        f"    rad2deg or r>d or rad>deg : radians → degrees{RESET}",
+        f" {UNDERLINE}temperature-conversions{RESET}",
+        f"    c2f or c>f or celsius>fahrenheit : Celsius → Fahrenheit{RESET}",
+        f"    f2c or f>c or fahrenheit>celsius : Fahrenheit → Celsius{RESET}",
+        f"    c2k or c>k or celsius>kelvin : Celsius → Kelvin{RESET}",
+        f"    k2c or k>c or kelvin>celsius : Kelvin → Celsius{RESET}",
+        f"    f2k or f>k or fahrenheit>kelvin : Fahrenheit → Kelvin{RESET}",
+        f"    k2f or k>f or kelvin>fahrenheit : Kelvin → Fahrenheit{RESET}",
+        f" {UNDERLINE}time-conversions{RESET}",
+        f"    >hms or 2hms   : decimal hours → H.MMSSss{RESET}",
+        f"    >h   or 2hours : H.MMSSss → decimal hours{RESET}",
+        f" {UNDERLINE}english length-conversions{RESET}",
+        f"    inch2cm    or inch>cm    : inches → centimeters{RESET}",
+        f"    cm2inch    or cm>inch    : centimeters → inches{RESET}",
+        f"    inch2mm    or inch>mm    : inches → millimeters{RESET}",
+        f"    mm2inch    or mm>inch    : millimeters → inches{RESET}",
+        f"    inch2m     or inch>m     : inches → meters{RESET}",
+        f"    m2inch     or m>inch     : meters → inches{RESET}",
+        f"    foot2m     or foot>m     : feet → meters{RESET}",
+        f"    m2foot     or m>foot     : meters → feet{RESET}",
+        f"    mile2km    or mile>km    : miles → kilometers{RESET}",
+        f"    km2mile    or km>mile    : kilometers → miles{RESET}",
+        f"    mile2m     or mile>m     : miles → meters{RESET}",
+        f"    m2mile     or m>mile     : meters → miles{RESET}",
+        f"    seamile2km or seamile>km : miles → kilometers{RESET}",
+        f"    km2seamile or km>seamile : kilometers → miles{RESET}",
+        f" {UNDERLINE}metric length-conversions{RESET}",
+        f"    km2m  or  km>m : kilometers → meters{RESET}",
+        f"    m2km  or  m>km : meters → kilometers{RESET}",
+        f"    cm2m  or  cm>m : centimeters → meters{RESET}",
+        f"    m2cm  or  m>cm : meters → centimeters{RESET}",
+        f"    mm2m  or  mm>m : millimeters → meters{RESET}",
+        f"    m2mm  or  m>mm : meters → millimeters{RESET}",
+        f" {UNDERLINE}japanese length-conversions{RESET}",
+        f"    sun2m     or  sun>m    : shaku → meters{RESET}",
+        f"    m2sun     or  m>sun    : meters → shaku{RESET}",
+        f"    ken2m     or  ken>m    : ken → meters{RESET}",
+        f"    m2ken     or  m>ken    : meters → ken{RESET}",
+        f"    shaku2m   or  shaku>m  : shaku → meters{RESET}",
+        f"    m2shaku   or  m>shaku  : meters → shaku{RESET}",
+        f"    shaku2cm  or  shaku>cm : shaku → centimeters{RESET}",
+        f"    cm2shaku  or  cm>shaku : centimeters → shaku{RESET}",
+        f"    shaku2mm  or  shaku>mm : shaku → millimeters{RESET}",
+        f"    mm2shaku  or  mm>shaku : millimeters → shaku{RESET}",
+        f"    ri2m      or  ri>m     : ri → meters{RESET}",
+        f"    m2ri      or  m>ri     : meters → ri{RESET}",
     ]
 
-    PAGE_SIZE   = os.get_terminal_size().lines - 3
-    total_pages = max(1, math.ceil(len(HELP_LINES) / PAGE_SIZE))
+    total_pages = max(1, math.ceil(len(HELP_LINES) / PAGE_SIZE -1))
     page        = 0
 
     def draw_page(p):
@@ -586,11 +588,11 @@ def display_help():
         start = p * PAGE_SIZE
         for line in HELP_LINES[start : start + PAGE_SIZE]:
             print(line)
-        if p < total_pages - 1:
-            print(f"{DARKGRAY}         ↓ more ↓{RESET}")
-        print(f"{WHITE}{BOLD}───────────────────────────────────────────────────────────{RESET}")
-        nav = f"{FOOTER}[Page {p+1}/{total_pages}] | \u2191: up | \u2193: down | SPACE: scrolldown | q: quit{RESET}"
-        sys.stdout.write(f"{WHITE}{nav}{RESET}")
+        #if p < total_pages - 1:
+        #    print(f"{ITALIC}         ↓ more ↓{RESET}")
+        #print(f"{BOLD}───────────────────────────────────────────────────────────{RESET}")
+        nav = f"{FOOTER}{f'[Page {p+1}/{total_pages}] | \u2191: up | \u2193: down | SPACE: scrolldown | q: quit'.ljust(PAGE_WIDTH)}{RESET}"
+        sys.stdout.write(f"{nav}{RESET}")
         sys.stdout.flush()
 
     draw_page(page)
@@ -611,7 +613,7 @@ def display_help():
                 draw_page(page)
         else:
             # Show an error for unknown keys, then redraw the current page
-            print(f"{WHITE}{BOLD}\n\n\n\nUnknown key: Use arrow keys, space, or 'q' to navigate.\n\n\n\n{RESET}")
+            print(f"{BOLD}\n\n\n\nUnknown key: Use arrow keys, space, or 'q' to navigate.\n\n\n\n{RESET}")
             time.sleep(2)
             sys.stdout.write(CLS + HOME)
             draw_page(page)
@@ -802,7 +804,7 @@ def execute_command(cmd):
                     else:
                         frac_str = f"{frac:0{SCALE_POW}d}".rstrip("0")
                         f.write(f"{sign}{whole}.{frac_str}\n")
-            print(f"\n{WHITE}Stack saved to: {filename}{RESET}")
+            print(f"\nStack saved to: {filename}{RESET}")
             time.sleep(3)
         except Exception as e:
             show_error(f"Error saving stack: {e}")

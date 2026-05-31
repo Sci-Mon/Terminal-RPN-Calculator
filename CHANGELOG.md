@@ -1,5 +1,14 @@
 # Changelog
 
+
+# v1.9
+* remove colors in favour of compatibility with white terminals
+* probe terminal-size for formatting
+  * footer
+  * help screen
+  * about screen
+
+
 ## v1.8.1
 
 * introduction of minor versions
