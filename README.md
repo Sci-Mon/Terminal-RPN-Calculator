@@ -3,7 +3,7 @@ title: Terminal RPN Calculator
 subtitle: "an RPN calculator shell for the terminal"
 section: 1
 author: Simon Widmer
-date: 03.05.2026
+date: 31.05.2026
 lang: en
 license: GNU GPL3
 cover-image: rpn-calc.svg
@@ -16,9 +16,17 @@ footer: RPN
 
 > an RPN calculator shell for the terminal
 
-## ![RPN CALC LOGO](rpn-calc.svg)
+## Screenshots
 
-![Screenshot.png](Screenshot.png)
+![RPN CALC LOGO](rpn-calc.svg)  
+*rpn calc icon*
+
+![Screenshot.png](Screenshot.png)  
+*rpn calc v1.9 running in xfce4-terminal*
+
+![screenshot_xterm_custom_colors_v1.9.png](screenshot_xterm_custom_colors_v1.9.png)  
+*rpn calc v1.9 with custom colorscheme in xterm*
+
 
 ## Preface and history 📜
 
