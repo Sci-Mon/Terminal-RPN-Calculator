@@ -24,7 +24,7 @@ footer: RPN
 ![Screenshot.png](Screenshot.png)  
 *rpn calc v1.9 running in xfce4-terminal*
 
-![screenshot-xterm-custom-colors-v1.9.png](screenshot_xterm_custom_colors_v1.9.png)  
+![screenshot-xterm-custom-colors-v1.9.png](screenshot-xterm-custom-colors-v1.9.png)  
 *rpn calc v1.9 with custom colorscheme in xterm*
 
 
