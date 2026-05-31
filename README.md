@@ -24,7 +24,7 @@ footer: RPN
 ![Screenshot.png](Screenshot.png)  
 *rpn calc v1.9 running in xfce4-terminal*
 
-![screenshot_xterm_custom_colors_v1.9.png](screenshot_xterm_custom_colors_v1.9.png)  
+![screenshot-xterm-custom-colors-v1.9.png](screenshot_xterm_custom_colors_v1.9.png)  
 *rpn calc v1.9 with custom colorscheme in xterm*
 
 
@@ -386,7 +386,7 @@ Error reports or corrections are welcome:
 * Hewlett Packard for the great [calculators](https://en.wikipedia.org/wiki/HP_calculators) (that can be programmed with [RPL](https://en.wikipedia.org/wiki/RPL_(programming_language))) over all the years.
 * Bob Bemer for the invention of [ANSI Escape Code](https://en.wikipedia.org/wiki/ANSI_escape_code) that is still supported on many platforms including Windows 11. Unbelievable after all those years!
 * Guido van Rossum for inventing the [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) programming language.
-* Ken Thompson, Dennis Ritchie, Brian Kernighan, Douglas McIlroy and Joe Ossanna for inventing the [Unix](https://en.wikipedia.org/wiki/Unix) operating system and all the developers who contributed to the Unix ecosystem. Without Unix, Linux would possibly have never been invented.
+* Ken Thompson, Dennis Ritchie, Brian Kernighan, Douglas McIlroy and Joe Ossanna et all for inventing the [Unix](https://en.wikipedia.org/wiki/Unix) operating system and all the developers who contributed to the Unix ecosystem. Without Unix, Linux would possibly have never been invented.
 * Richard Stallman for inventing the [GNU](https://en.wikipedia.org/wiki/GNU) operating system and all the developers who contributed to the GNU ecosystem. Without GNU, Linux would be just a kernel and not a full operating system.
 * Linus Torvalds for inventing the [Linux](https://en.wikipedia.org/wiki/Linux) operating system kernel and all the developers who contributed to the Linux ecosystem.
 
