@@ -2,7 +2,6 @@
 title: Terminal RPN Calculator
 author: Simon Widmer
 license: GNU GPL3
-cover-image: rpn-calc.svg
 description: "an RPN calculator for the terminal"
 ---
 
